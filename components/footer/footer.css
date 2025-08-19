@@ -1,0 +1,23 @@
+
+.footer {
+    border-top: 1px solid #e5e7eb; 
+    padding: 1rem 0; 
+    margin-top: auto;
+    background-color: #ffffff;
+    color: #9ca3af;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dark .footer {
+    border-top: 1px solid #0a0f1a; 
+    background-color: #060910; 
+    color: #9ca3af;
+}
+
+.footer-text {
+    margin: 0;
+    font-size: 0.875rem; 
+}
