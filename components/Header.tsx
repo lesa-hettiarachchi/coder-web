@@ -1,8 +1,14 @@
+'use client'
+
 import Link from 'next/link'
 import React from 'react'
 import NavBar from './NavBar'
+import { usePathname } from 'next/navigation'
+import MobileNavBar from './MobileNavBar'
+
 
 const Header = () => {
+    const pathname = usePathname()
   return (
     <header className='px-5 py-3 font-extrabold'>
         <div>
@@ -12,11 +18,14 @@ const Header = () => {
                 </Link>
                 <div className="flex items-center gap-4">
                     <span className="text-lg">21533031</span>
+                    <div className="lg:hidden">
+                        <MobileNavBar pathname={pathname} />
+                    </div>
                 </div>
             </div>
         </div>
 
-        <NavBar/>
+        <NavBar pathname={pathname}/>
 
     </header>
   )

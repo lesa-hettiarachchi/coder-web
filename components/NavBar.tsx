@@ -9,19 +9,26 @@ const tabs = [
     { name: 'Court Rooms', href: '/court-rooms' },
 ];
 
-const NavBar = () => {
+const NavBar = ({ pathname }: { pathname: string }) => {
   return (
-    <nav className="hidden lg:flex justify-center gap-6 py-3 text-lg">
-      {tabs.map((tab) => (
-        <Link
-          key={tab.name}
-          href={tab.href}
-          className="relative group"
-        >
-          <span className="relative z-10">{tab.name}</span>
-          <span className="absolute left-1/2 bottom-0 h-[2px] w-0 bg-red-600 transition-all duration-300 group-hover:left-0 group-hover:w-full"></span>
-        </Link>
-      ))}
+    <nav className="hidden lg:flex justify-center gap-8 py-3 text-lg">
+      {tabs.map((tab) => {
+        const isActive = pathname === tab.href;
+        return (
+          <Link
+            key={tab.name}
+            href={tab.href}
+            className="relative group px-1"
+          >
+            <span className={`relative z-10 ${isActive ? 'text-red-700' : ''}`}>
+              {tab.name}
+            </span>
+            <span
+              className={`absolute left-1/2 bottom-0 h-[2px] w-0 bg-red-700 transition-all duration-300 group-hover:left-0 group-hover:w-full`}
+            ></span>
+          </Link>
+        );
+      })}
     </nav>
   )
 }
