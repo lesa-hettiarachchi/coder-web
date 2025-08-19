@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import React from 'react'
+import NavBar from './NavBar'
 
 const Header = () => {
   return (
@@ -14,6 +15,8 @@ const Header = () => {
                 </div>
             </div>
         </div>
+
+        <NavBar/>
 
     </header>
   )
