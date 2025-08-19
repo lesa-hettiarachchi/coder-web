@@ -5,6 +5,7 @@ import React from 'react'
 import NavBar from './NavBar'
 import { usePathname } from 'next/navigation'
 import MobileNavBar from './MobileNavBar'
+import ThemeToggle from './ThemeToggle'
 
 
 const Header = () => {
@@ -18,6 +19,7 @@ const Header = () => {
                 </Link>
                 <div className="flex items-center gap-4">
                     <span className="text-lg">21533031</span>
+                    <ThemeToggle/>
                     <div className="lg:hidden">
                         <MobileNavBar pathname={pathname} />
                     </div>
