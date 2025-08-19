@@ -27,7 +27,7 @@ const MobileNavBar = ({ pathname }: { pathname: string }) => {
       </SheetTrigger>
 
       <SheetContent side="right" className="w-64 p-4">
-        <SheetTitle>Menu</SheetTitle>
+        <SheetTitle className='text-3xl font-extrabold'>Menu</SheetTitle>
         <nav className="flex flex-col gap-4 text-xl mt-6">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href;
@@ -37,7 +37,7 @@ const MobileNavBar = ({ pathname }: { pathname: string }) => {
                 href={tab.href}
                 onClick={() => setIsOpen(false)}
                 className={`transition-colors ${
-                  isActive ? 'font-bold text-red-700 underline' : 'hover:text-red-700'
+                  isActive ? 'font-bold text-red-700' : 'hover:text-red-600'
                 }`}
               >
                 {tab.name}
