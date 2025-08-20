@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { TabsSection } from '@/components/home/TabSection';
 import { ContentSection } from '@/components/home/ContentSection';
@@ -10,7 +10,7 @@ import { useTabsManager } from '@/hooks/useTabManager';
 import { useUrlParams } from '@/hooks/useUrlParams';
 import { Tab } from '@/types/tabs';
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const {
     tabs,
@@ -99,3 +99,12 @@ export default function Home() {
 
   );
 };
+
+
+export default function Home() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
