@@ -10,7 +10,7 @@ import { useTabsManager } from '@/hooks/useTabManager';
 import { useUrlParams } from '@/hooks/useUrlParams';
 import { Tab } from '@/types/tabs';
 
-export const Home: React.FC = () => {
+export default function Home() {
   const router = useRouter();
   const {
     tabs,
@@ -99,5 +99,3 @@ export const Home: React.FC = () => {
 
   );
 };
-
-export default Home;
