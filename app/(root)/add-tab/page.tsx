@@ -8,7 +8,7 @@ import { useTabForm } from '@/hooks/useTabForm';
 import { useFormValidation } from '@/hooks/useValidation';
 import { navigateToHome } from '@/utils/navigation';
 
-export const AddTab: React.FC = () => {
+export default function AddTab() {
   const router = useRouter();
   
   const { formData, isSubmitting, handleChange, handleSubmit } = useTabForm({
@@ -61,5 +61,3 @@ export const AddTab: React.FC = () => {
     </div>
   );
 };
-
-export default AddTab;
