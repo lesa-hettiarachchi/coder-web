@@ -57,7 +57,6 @@ export default function EditTab() {
   return (
     <div className="bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
         <div className="space-y-4">
           <Button
             variant="ghost"
@@ -73,14 +72,13 @@ export default function EditTab() {
           </div>
         </div>
 
-        {/* Form */}
         <Card>
           <CardHeader>
             <CardTitle>Tab Details</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Tab Title */}
+
               <div className="space-y-2">
                 <Label htmlFor="title">Tab Title</Label>
                 <Input
@@ -92,7 +90,6 @@ export default function EditTab() {
                 />
               </div>
 
-              {/* Instructions */}
               <div className="space-y-2">
                 <Label htmlFor="instructions">Instructions</Label>
                 <Textarea
@@ -105,7 +102,6 @@ export default function EditTab() {
                 />
               </div>
 
-              {/* Code */}
               <div className="space-y-2">
                 <Label htmlFor="code">Code</Label>
                 <Textarea
@@ -119,7 +115,6 @@ export default function EditTab() {
                 />
               </div>
 
-              {/* Submit Buttons */}
               <div className="flex gap-3">
                 <Button type="submit">
                   Update

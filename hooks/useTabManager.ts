@@ -31,7 +31,6 @@ export const useTabsManager = () => {
     loadData();
   }, []);
 
-  // Save active tab changes to localStorage
   useEffect(() => {
     if (isLoaded && activeTabId !== null) {
       tabsService.setActiveTabId(activeTabId);
@@ -112,7 +111,7 @@ export const useTabsManager = () => {
     try {
       const success = tabsService.importData(jsonData);
       if (success) {
-        // Reload data after import
+        
         const storedTabs = tabsService.getAllTabs();
         const storedActiveId = tabsService.getActiveTabId();
         

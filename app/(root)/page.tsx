@@ -24,7 +24,6 @@ function HomeContent() {
     getActiveTab
   } = useTabsManager();
 
-  // Wrap tab actions to show toast
   const handleAddTabWithToast = (data: TabFormData) => {
     addTab(data);
     toast.success(`Tab Created Successfully`);

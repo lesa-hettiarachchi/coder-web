@@ -1,8 +1,11 @@
 import React from 'react'
 
-function page() {
+const page = () => {
   return (
-    <div>coding races</div>
+    <div>
+        <h1>Coding Races</h1>
+        <span>Comming Soon....</span>
+    </div>
   )
 }
 
