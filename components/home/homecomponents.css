@@ -1,0 +1,116 @@
+.tabs-section {
+  /* Container styles */
+}
+
+.tabs-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab-item {
+  position: relative;
+}
+
+.tab-item:hover .tab-item__edit-btn {
+  opacity: 1;
+}
+
+.tab-item__main-btn {
+  padding-right: 2rem !important;
+}
+
+.tab-item__edit-btn {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  height: 1.5rem !important;
+  width: 1.5rem !important;
+  padding: 0 !important;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.add-tab-section {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.content-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .content-section {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.instructions-card {
+  /* Any custom styles for instructions */
+}
+
+.instructions-content {
+  white-space: pre-wrap;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.code-card {
+  /* Any custom styles for code */
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.code-block {
+  background-color: hsl(var(--muted));
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  border: 1px solid hsl(var(--border));
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.code-text {
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.empty-state__icon {
+  margin: 0 auto 1rem;
+  height: 3rem;
+  width: 3rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.empty-state__title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: hsl(var(--foreground));
+}
+
+.empty-state__description {
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 1rem;
+}
+
+.empty-state__action {
+  /* Any custom button styles */
+}
