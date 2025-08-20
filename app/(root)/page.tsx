@@ -19,10 +19,11 @@ function HomeContent() {
     setActiveTabId,
     addTab,
     updateTab,
+    deleteTab,
     getActiveTab
   } = useTabsManager();
 
-  useUrlParams(addTab, updateTab);
+  useUrlParams(addTab, updateTab, deleteTab);
 
   const handleAddTab = (): void => {
     router.push('/add-tab');
