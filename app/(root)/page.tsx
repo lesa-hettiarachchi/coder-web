@@ -8,8 +8,8 @@ import { EmptyState } from '@/components/home/Empystate';
 import { LoadingState } from '@/components/home/LoadingState';
 import { useTabsManager } from '@/hooks/useTabManager';
 import { useUrlParams } from '@/hooks/useUrlParams';
-import { Tab } from '@/types/tabs';
-import { toast } from 'sonner'; // <-- Import toast
+import { Tab, TabFormData } from '@/types/tabs';
+import { toast } from 'sonner';
 
 function HomeContent() {
   const router = useRouter();
@@ -25,18 +25,19 @@ function HomeContent() {
   } = useTabsManager();
 
   // Wrap tab actions to show toast
-  const handleAddTabWithToast = (data: any) => {
+  const handleAddTabWithToast = (data: TabFormData) => {
     addTab(data);
     toast.success(`Tab Created Successfully`);
   };
-  const handleUpdateTabWithToast = (id: number, data: any) => {
+
+  const handleUpdateTabWithToast = (id: number, data: TabFormData) => {
     updateTab(id, data);
-    toast.success(`Tab updated SuccssFully`);
+    toast.success(`Tab updated Successfully`);
   };
+
   const handleDeleteTabWithToast = (id: number) => {
-    const tab = tabs.find(t => t.id === id);
     deleteTab(id);
-    toast.error(`Tab Deleted Permenetly`);
+    toast.error(`Tab Deleted Permanently`);
   };
 
   useUrlParams(handleAddTabWithToast, handleUpdateTabWithToast, handleDeleteTabWithToast);
@@ -61,7 +62,7 @@ function HomeContent() {
     try {
       await navigator.clipboard.writeText(activeTab.code);
       toast.success('Code copied!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy code');
     }
   };
