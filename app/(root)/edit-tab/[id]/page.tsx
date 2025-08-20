@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Trash2 } from 'lucide-react';
+import { PageHeader } from '@/components/addpage/PageHeader';
+import { navigateToHome } from '@/utils/navigation';
 
 export default function EditTab() {
   const router = useRouter();
@@ -54,23 +56,18 @@ export default function EditTab() {
     router.push(`/?${urlParams.toString()}`);
   }
 
+  const handleBack = () => {
+    navigateToHome(router);
+  };
+
   return (
     <div className="bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="space-y-4">
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/')}
-            className="pl-0"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Edit Tab</h1>
-            <p className="text-muted-foreground">Update your code snippet and instructions</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Edit Tab"
+          subtitle="Update your code snippet and instructions"
+          onBack={handleBack}
+        />
 
         <Card>
           <CardHeader>
