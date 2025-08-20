@@ -9,6 +9,7 @@ import { LoadingState } from '@/components/home/LoadingState';
 import { useTabsManager } from '@/hooks/useTabManager';
 import { useUrlParams } from '@/hooks/useUrlParams';
 import { Tab } from '@/types/tabs';
+import { toast } from 'sonner'; // <-- Import toast
 
 function HomeContent() {
   const router = useRouter();
@@ -23,7 +24,22 @@ function HomeContent() {
     getActiveTab
   } = useTabsManager();
 
-  useUrlParams(addTab, updateTab, deleteTab);
+  // Wrap tab actions to show toast
+  const handleAddTabWithToast = (data: any) => {
+    addTab(data);
+    toast.success(`Tab Created Successfully`);
+  };
+  const handleUpdateTabWithToast = (id: number, data: any) => {
+    updateTab(id, data);
+    toast.success(`Tab updated SuccssFully`);
+  };
+  const handleDeleteTabWithToast = (id: number) => {
+    const tab = tabs.find(t => t.id === id);
+    deleteTab(id);
+    toast.error(`Tab Deleted Permenetly`);
+  };
+
+  useUrlParams(handleAddTabWithToast, handleUpdateTabWithToast, handleDeleteTabWithToast);
 
   const handleAddTab = (): void => {
     router.push('/add-tab');
@@ -44,14 +60,12 @@ function HomeContent() {
 
     try {
       await navigator.clipboard.writeText(activeTab.code);
-      // You could add a toast notification here
-      console.log('Code copied to clipboard!');
+      toast.success('Code copied!');
     } catch (err) {
-      console.error('Failed to copy code:', err);
+      toast.error('Failed to copy code');
     }
   };
 
-  // Show loading state while data is being loaded from localStorage
   if (!isLoaded) {
     return <LoadingState />;
   }
@@ -59,48 +73,39 @@ function HomeContent() {
   const activeTab = getActiveTab();
 
   return (
-    
     <div className="bg-[hsl(var(--background))] p-6">
-  <div className="max-w-7xl mx-auto flex flex-col gap-6">
-    
-    {/* Header */}
-    <header className="mb-4">
-      <h1 className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2 leading-[1.2] tracking-[-0.025em]">
-        Welcome Home
-      </h1>
-      <p className="text-base text-[hsl(var(--muted-foreground))]">
-        Manage your code snippets and instructions
-      </p>
-    </header>
+      <div className="max-w-7xl mx-auto flex flex-col gap-6">
+        <header className="mb-4">
+          <h1 className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2 leading-[1.2] tracking-[-0.025em]">
+            Welcome Home
+          </h1>
+          <p className="text-base text-[hsl(var(--muted-foreground))]">
+            Manage your code snippets and instructions
+          </p>
+        </header>
 
-    {/* Tabs Section */}
-    <TabsSection
-      tabs={tabs}
-      activeTabId={activeTabId ?? 0}
-      onTabSelect={setActiveTabId}
-      onAddTab={handleAddTab}
-      onEditTab={handleEditTab}
-    />
+        <TabsSection
+          tabs={tabs}
+          activeTabId={activeTabId ?? 0}
+          onTabSelect={setActiveTabId}
+          onAddTab={handleAddTab}
+          onEditTab={handleEditTab}
+        />
 
-    {/* Content Section */}
-    {activeTab && (
-      <ContentSection
-        activeTab={activeTab}
-        onCopyCode={handleCopyCode}
-      />
-    )}
+        {activeTab && (
+          <ContentSection
+            activeTab={activeTab}
+            onCopyCode={handleCopyCode}
+          />
+        )}
 
-    {/* Empty State */}
-    {tabs.length === 0 && (
-      <EmptyState onAddTab={handleAddTab} />
-    )}
-
-  </div>
-</div>
-
+        {tabs.length === 0 && (
+          <EmptyState onAddTab={handleAddTab} />
+        )}
+      </div>
+    </div>
   );
-};
-
+}
 
 export default function Home() {
   return (
