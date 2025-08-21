@@ -14,7 +14,7 @@ export default function AboutPage() {
           </p>
         </header>
 
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-1">
           <DevDetails />
           <VideoTutorial />
         </div>

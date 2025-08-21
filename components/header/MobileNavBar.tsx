@@ -7,10 +7,10 @@ import { Menu } from 'lucide-react';
 
 const tabs = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Coding Races', href: '/coding-races' },
     { name: 'Escape Rooms', href: '/escape-rooms' },
-    { name: 'Court Rooms', href: '/court-rooms' },
-    { name: 'About', href: '/about' }
+    { name: 'Court Rooms', href: '/court-rooms' }
 ];
 const MobileNavBar = ({ pathname }: { pathname: string }) => {
   const [isOpen, setIsOpen] = useState(false);

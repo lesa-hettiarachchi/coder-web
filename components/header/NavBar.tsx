@@ -3,10 +3,10 @@ import React from 'react'
 
 const tabs = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Coding Races', href: '/coding-races' },
     { name: 'Escape Rooms', href: '/escape-rooms' },
-    { name: 'Court Rooms', href: '/court-rooms' },
-    { name: 'About', href: '/about' }
+    { name: 'Court Rooms', href: '/court-rooms' }
 ];
 
 const NavBar = ({ pathname }: { pathname: string }) => {
