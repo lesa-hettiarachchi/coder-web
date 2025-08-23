@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit } from 'lucide-react';
 import { Tab } from '@/types/tabs';
+import Cookies from 'js-cookie';
 
 
 interface TabsSectionProps {
@@ -21,6 +22,11 @@ export const TabsSection: React.FC<TabsSectionProps> = ({
   onAddTab,
   onEditTab
 }) => {
+  const handleTabSelect = (id: number) => {
+    Cookies.set('activeTab', String(id), { expires: 7 });
+    onTabSelect(id);
+  };
+
   return (
     <Card className="w-full">
   <CardHeader>
@@ -37,7 +43,7 @@ export const TabsSection: React.FC<TabsSectionProps> = ({
           <Button
             variant={activeTabId === tab.id ? "default" : "outline"}
             size="sm"
-            onClick={() => onTabSelect(tab.id)}
+            onClick={() => handleTabSelect(tab.id)}
             className="pr-8"
           >
             {tab.title}

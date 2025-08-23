@@ -8,12 +8,13 @@ import MobileNavBar from './MobileNavBar'
 import ThemeToggle from './ThemeToggle'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
-
+import { useNavigationCookies } from '@/hooks/useNavigationCookies'
 
 const Header = () => {
     const pathname = usePathname()
     const {theme} = useTheme()
     const [mounted, setMounted] = useState(false)
+    const { setActivePage } = useNavigationCookies();
 
   useEffect(() => {
     setMounted(true)
@@ -35,13 +36,13 @@ const Header = () => {
                     <span className="text-lg">21533031</span>
                     <ThemeToggle/>
                     <div className="lg:hidden">
-                        <MobileNavBar pathname={pathname} />
+                        <MobileNavBar pathname={pathname} onPageVisit={setActivePage} />
                     </div>
                 </div>
             </div>
         </div>
 
-        <NavBar pathname={pathname}/>
+        <NavBar pathname={pathname} onPageVisit={setActivePage}/>
 
     </header>
   )

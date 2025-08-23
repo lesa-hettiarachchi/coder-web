@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Tab } from '@/types/tabs';
 import { tabsService } from '@/service/tabsService';
+import Cookies from 'js-cookie';
 
 export const useTabsManager = () => {
   const [tabs, setTabs] = useState<Tab[]>([]);
@@ -15,7 +16,22 @@ export const useTabsManager = () => {
         
         setTabs(storedTabs);
         
-        if (storedActiveId && storedTabs.some(tab => tab.id === storedActiveId)) {
+        let cookieTabId: number | null = null;
+        try {
+          const cookieActiveTab = Cookies.get('activeTab');
+          if (cookieActiveTab) {
+            const parsed = parseInt(cookieActiveTab);
+            if (!isNaN(parsed) && parsed > 0) {
+              cookieTabId = parsed;
+            }
+          }
+        } catch (cookieError) {
+          console.warn('Failed to read activeTab cookie:', cookieError);
+        }
+        
+        if (cookieTabId && storedTabs.some(tab => tab.id === cookieTabId)) {
+          setActiveTabId(cookieTabId);
+        } else if (storedActiveId && storedTabs.some(tab => tab.id === storedActiveId)) {
           setActiveTabId(storedActiveId);
         } else if (storedTabs.length > 0) {
           setActiveTabId(storedTabs[0].id);

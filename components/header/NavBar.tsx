@@ -9,7 +9,7 @@ const tabs = [
     { name: 'Court Rooms', href: '/court-rooms' }
 ];
 
-const NavBar = ({ pathname }: { pathname: string }) => {
+const NavBar = ({ pathname, onPageVisit }: { pathname: string; onPageVisit: (href: string) => void }) => {
   return (
     <nav className="hidden lg:flex justify-center gap-8 py-3 text-lg">
       {tabs.map((tab) => {
@@ -19,6 +19,7 @@ const NavBar = ({ pathname }: { pathname: string }) => {
             key={tab.name}
             href={tab.href}
             className="relative group px-1"
+            onClick={() => onPageVisit(tab.href)}
           >
             <span className={`relative z-10 ${isActive ? 'text-red-700' : ''}`}>
               {tab.name}

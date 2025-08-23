@@ -12,7 +12,8 @@ const tabs = [
     { name: 'Escape Rooms', href: '/escape-rooms' },
     { name: 'Court Rooms', href: '/court-rooms' }
 ];
-const MobileNavBar = ({ pathname }: { pathname: string }) => {
+
+const MobileNavBar = ({ pathname, onPageVisit }: { pathname: string; onPageVisit: (href: string) => void }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -35,7 +36,10 @@ const MobileNavBar = ({ pathname }: { pathname: string }) => {
               <Link
                 key={tab.name}
                 href={tab.href}
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  onPageVisit(tab.href);
+                  setIsOpen(false);
+                }}
                 className={`transition-colors ${
                   isActive ? 'font-bold text-red-700' : 'hover:text-red-600'
                 }`}
