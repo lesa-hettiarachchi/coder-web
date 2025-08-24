@@ -48,7 +48,7 @@ export const TabForm: React.FC<TabFormProps> = ({
           required
         />
         {errors.title && (
-          <span className="text-[hsl(var(--destructive))] text-sm mt-1">
+          <span className="text-red-600 text-sm mt-1">
             {errors.title}
           </span>
         )}
@@ -67,7 +67,7 @@ export const TabForm: React.FC<TabFormProps> = ({
           required
         />
         {errors.instructions && (
-          <span className="text-[hsl(var(--destructive))] text-sm mt-1">
+          <span className="text-red-600 text-sm mt-1">
             {errors.instructions}
           </span>
         )}
@@ -87,7 +87,7 @@ export const TabForm: React.FC<TabFormProps> = ({
           className="font-mono text-sm leading-6"
         />
         {errors.code && (
-          <span className="text-[hsl(var(--destructive))] text-sm mt-1">
+          <span className="text-red-600 text-sm mt-1">
             {errors.code}
           </span>
         )}
