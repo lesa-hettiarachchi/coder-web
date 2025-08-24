@@ -13,7 +13,7 @@ export default function VideoTutorial() {
         <div className="aspect-video bg-muted rounded-lg overflow-hidden">
           <iframe
             className="w-full h-full"
-            src="https://www.youtube.com/embed/tp5gzuO321U?rel=0&modestbranding=1"
+            src="https://www.youtube.com/embed/EjF2TdFGyEA?rel=0&modestbranding=1"
             title="How to Use This Website Tutorial"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
