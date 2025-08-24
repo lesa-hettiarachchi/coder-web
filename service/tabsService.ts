@@ -33,7 +33,6 @@ export class TabsService {
         return { tabs: [], activeTabId: null, lastUpdated: new Date().toISOString() };
       }
 
-
       const parsed: TabsStorage = JSON.parse(data);
       parsed.tabs = parsed.tabs.map(tab => ({
         ...tab,createdAt: tab.createdAt ? new Date(tab.createdAt) : undefined,
@@ -106,7 +105,6 @@ export class TabsService {
     storage.tabs = storage.tabs.filter(tab => tab.id !== id);
     
     if (storage.tabs.length < initialLength) {
-      // If deleted tab was active, reset active tab
       if (storage.activeTabId === id) {
         storage.activeTabId = storage.tabs.length > 0 ? storage.tabs[0].id : null;
       }
@@ -147,5 +145,4 @@ export class TabsService {
   }
 }
 
-// Export singleton instance
 export const tabsService = TabsService.getInstance();
