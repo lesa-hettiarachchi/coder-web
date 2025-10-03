@@ -1,12 +1,10 @@
-import React from 'react'
+"use client";
 
-const page = () => {
-  return (
-    <div>
-        <h1>Escape Rooms</h1>
-        <span>Comming Soon....</span>
-    </div>
-  )
-}
+import React from 'react';
+import { EscapeRoomGame } from '@/components/escape-room/EscapeRoomGame';
 
-export default page
+const EscapeRoomsPage = () => {
+  return <EscapeRoomGame />;
+};
+
+export default EscapeRoomsPage;
