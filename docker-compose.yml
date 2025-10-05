@@ -1,0 +1,53 @@
+services:
+  # Database service
+  database:
+    image: postgres:15-alpine
+    container_name: escape-room-db
+    environment:
+      POSTGRES_DB: escape_room
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application service
+  app:
+    build: .
+    container_name: escape-room-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@database:5432/escape_room?schema=public
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./prisma:/app/prisma
+    command: >
+      sh -c "
+        npx prisma generate &&
+        npx prisma db push &&
+        npx prisma db seed &&
+        npm start
+      "
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: escape-room-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
