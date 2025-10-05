@@ -14,7 +14,10 @@ export const useEscapeRoom = () => {
     feedback: '',
     stagesCompleted: [],
     gameWon: false,
-    gameLost: false
+    gameLost: false,
+    currentPoints: 0,
+    hintsUsed: [],
+    showHint: false
   });
 
   const [stages, setStages] = useState<EscapeRoomStage[]>([]);
@@ -74,7 +77,10 @@ export const useEscapeRoom = () => {
         feedback: '',
         stagesCompleted: [],
         gameWon: false,
-        gameLost: false
+        gameLost: false,
+        currentPoints: 0,
+        hintsUsed: [],
+        showHint: false
       });
     } catch (error) {
       console.error('Failed to start game:', error);
@@ -91,7 +97,10 @@ export const useEscapeRoom = () => {
       feedback: '',
       stagesCompleted: [],
       gameWon: false,
-      gameLost: false
+      gameLost: false,
+      currentPoints: 0,
+      hintsUsed: [],
+      showHint: false
     });
     escapeRoomService.clearGameData();
   }, []);
@@ -128,10 +137,16 @@ export const useEscapeRoom = () => {
     if (gameState.userCode.trim() === currentStageData.solution.trim() || isCorrect) {
       const newStagesCompleted = [...gameState.stagesCompleted, currentStageData.id];
       
+      // Calculate time bonus: (timeLeft / timeLimit) * 50 bonus points
+      const timeBonus = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 50);
+      const hintPenalty = gameState.hintsUsed.includes(currentStageData.id) ? 20 : 0;
+      const stagePoints = currentStageData.points - hintPenalty + timeBonus;
+      
       setGameState(prev => ({
         ...prev,
-        feedback: '✓ Correct! Moving to next stage...',
-        stagesCompleted: newStagesCompleted
+        feedback: `✓ Correct! +${stagePoints} points (${currentStageData.points - hintPenalty} base + ${timeBonus} time bonus)`,
+        stagesCompleted: newStagesCompleted,
+        currentPoints: prev.currentPoints + stagePoints
       }));
 
       // Move to next stage after delay
@@ -141,7 +156,8 @@ export const useEscapeRoom = () => {
             ...prev,
             currentStage: prev.currentStage + 1,
             userCode: stages[gameState.currentStage + 1]?.starterCode || '',
-            feedback: ''
+            feedback: '',
+            showHint: false
           }));
         }
       }, 1500);
@@ -151,7 +167,7 @@ export const useEscapeRoom = () => {
         feedback: '✗ Not quite right. Check the hint and try again!'
       }));
     }
-  }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, stages, normalizeCode]);
+  }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, gameState.hintsUsed, stages, normalizeCode]);
 
   const skipStage = useCallback(() => {
     if (gameState.currentStage < stages.length - 1) {
@@ -164,6 +180,42 @@ export const useEscapeRoom = () => {
     }
   }, [gameState.currentStage, stages]);
 
+  const goToNextStage = useCallback(() => {
+    if (gameState.currentStage < stages.length - 1) {
+      setGameState(prev => ({
+        ...prev,
+        currentStage: prev.currentStage + 1,
+        userCode: stages[gameState.currentStage + 1]?.starterCode || '',
+        feedback: ''
+      }));
+    }
+  }, [gameState.currentStage, stages]);
+
+  const goToPreviousStage = useCallback(() => {
+    if (gameState.currentStage > 0) {
+      setGameState(prev => ({
+        ...prev,
+        currentStage: prev.currentStage - 1,
+        userCode: stages[gameState.currentStage - 1]?.starterCode || '',
+        feedback: '',
+        showHint: false
+      }));
+    }
+  }, [gameState.currentStage, stages]);
+
+  const useHint = useCallback(() => {
+    const currentStageData = stages[gameState.currentStage];
+    if (!currentStageData || gameState.hintsUsed.includes(currentStageData.id)) return;
+
+    setGameState(prev => ({
+      ...prev,
+      showHint: true,
+      hintsUsed: [...prev.hintsUsed, currentStageData.id],
+      currentPoints: Math.max(0, prev.currentPoints - 20), // Deduct points immediately
+      feedback: `Hint used! -20 points deducted.`
+    }));
+  }, [gameState.currentStage, gameState.hintsUsed, stages]);
+
   const formatTime = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -173,6 +225,21 @@ export const useEscapeRoom = () => {
   const getCurrentStage = useCallback((): EscapeRoomStage | null => {
     return stages[gameState.currentStage] || null;
   }, [stages, gameState.currentStage]);
+
+  const getCurrentStagePoints = useCallback(() => {
+    const currentStageData = stages[gameState.currentStage];
+    if (!currentStageData) return { base: 0, timeBonus: 0, total: 0 };
+    
+    const timeBonus = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 50);
+    const hintPenalty = gameState.hintsUsed.includes(currentStageData.id) ? 20 : 0;
+    const basePoints = currentStageData.points - hintPenalty;
+    
+    return {
+      base: basePoints,
+      timeBonus: timeBonus,
+      total: basePoints + timeBonus
+    };
+  }, [gameState.currentStage, gameState.timeLeft, gameState.customTime, gameState.hintsUsed, stages]);
 
   return {
     gameState,
@@ -184,7 +251,11 @@ export const useEscapeRoom = () => {
     updateUserCode,
     checkSolution,
     skipStage,
+    goToNextStage,
+    goToPreviousStage,
+    useHint,
     formatTime,
-    getCurrentStage
+    getCurrentStage,
+    getCurrentStagePoints
   };
 };

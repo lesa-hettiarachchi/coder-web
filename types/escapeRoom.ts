@@ -20,6 +20,9 @@ export interface EscapeRoomGameState {
   stagesCompleted: number[];
   gameWon: boolean;
   gameLost: boolean;
+  currentPoints: number;
+  hintsUsed: number[];
+  showHint: boolean;
 }
 
 export interface EscapeRoomGameData {

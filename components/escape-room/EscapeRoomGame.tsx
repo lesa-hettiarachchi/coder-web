@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw } from 'lucide-react';
+import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw, ChevronLeft, ChevronRight, Lightbulb, Star } from 'lucide-react';
 import { useEscapeRoom } from '@/hooks/useEscapeRoom';
 import { EscapeRoomBackground } from './EscapeRoomBackground';
 
@@ -17,9 +17,12 @@ export const EscapeRoomGame: React.FC = () => {
     updateCustomTime,
     updateUserCode,
     checkSolution,
-    skipStage,
+    goToNextStage,
+    goToPreviousStage,
+    useHint,
     formatTime,
-    getCurrentStage
+    getCurrentStage,
+    getCurrentStagePoints
   } = useEscapeRoom();
 
   if (!isLoaded) {
@@ -188,6 +191,7 @@ export const EscapeRoomGame: React.FC = () => {
 
   // Main game interface
   const currentStage = getCurrentStage();
+  const stagePoints = getCurrentStagePoints();
   if (!currentStage) return null;
 
   return (
@@ -218,6 +222,13 @@ export const EscapeRoomGame: React.FC = () => {
                     {gameState.stagesCompleted.length}/{stages.length}
                   </p>
                 </div>
+                <div className="text-center">
+                  <Star className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
+                  <p className="text-2xl font-bold text-yellow-500">
+                    {gameState.currentPoints}
+                  </p>
+                  <p className="text-[hsl(var(--muted-foreground))] text-sm">Points</p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -238,7 +249,7 @@ export const EscapeRoomGame: React.FC = () => {
                   </div>
                   {idx < stages.length - 1 && (
                     <div className={`w-12 h-1 ${
-                      gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500' : 'bg-[hsl(var(--muted))]'
+                      gameState.stagesCompleted.includes(stage.id) && gameState.stagesCompleted.includes(stages[idx + 1]?.id) ? 'bg-green-500' : 'bg-[hsl(var(--muted))]'
                     }`} />
                   )}
                 </div>
@@ -252,23 +263,40 @@ export const EscapeRoomGame: React.FC = () => {
           {/* Instructions */}
           <Card className="border-2 border-[hsl(var(--primary))]">
             <CardHeader>
-              <CardTitle className="text-2xl">{currentStage.title}</CardTitle>
-              <CardDescription className="text-base">
-                {currentStage.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400">
-                <CardContent className="p-4">
-                  <div className="flex">
-                    <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-yellow-800 dark:text-yellow-200 font-semibold">Hint:</p>
-                      <p className="text-yellow-700 dark:text-yellow-100 text-sm">{currentStage.hint}</p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-2xl">{currentStage.title}</CardTitle>
+                  <CardDescription className="text-base">
+                    {currentStage.description}
+                  </CardDescription>
+                </div>
+                <div className="text-right">
+                  <div className="bg-yellow-100 dark:bg-yellow-900/20 px-3 py-2 rounded-lg">
+                    <div className="text-sm text-yellow-600 dark:text-yellow-400 font-semibold">Points Available</div>
+                    <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                      {stagePoints.total}
+                    </div>
+                    <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                      {stagePoints.base} base + {stagePoints.timeBonus} time bonus
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {gameState.showHint && (
+                <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400">
+                  <CardContent className="p-4">
+                    <div className="flex">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-yellow-800 dark:text-yellow-200 font-semibold">Hint:</p>
+                        <p className="text-yellow-700 dark:text-yellow-100 text-sm">{currentStage.hint}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {gameState.feedback && (
                 <Card className={`${
@@ -286,16 +314,37 @@ export const EscapeRoomGame: React.FC = () => {
 
               <div className="flex gap-2">
                 <Button
+                  onClick={goToPreviousStage}
+                  variant="outline"
+                  disabled={gameState.currentStage === 0}
+                  className="flex items-center"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </Button>
+                <Button
+                  onClick={useHint}
+                  variant="outline"
+                  disabled={gameState.hintsUsed.includes(currentStage.id)}
+                  className="flex items-center"
+                >
+                  <Lightbulb className="w-4 h-4 mr-1" />
+                  {gameState.hintsUsed.includes(currentStage.id) ? 'Hint Used' : 'Hint (-20pts)'}
+                </Button>
+                <Button
                   onClick={checkSolution}
                   className="flex-1"
                 >
                   Submit Solution
                 </Button>
                 <Button
-                  onClick={skipStage}
+                  onClick={goToNextStage}
                   variant="outline"
+                  disabled={gameState.currentStage === stages.length - 1}
+                  className="flex items-center"
                 >
-                  Skip
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
             </CardContent>
@@ -317,6 +366,27 @@ export const EscapeRoomGame: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Leaderboard */}
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
+              Leaderboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-2 bg-[hsl(var(--muted))] rounded">
+                <span className="font-semibold">Your Score</span>
+                <span className="text-yellow-500 font-bold">{gameState.currentPoints} points</span>
+              </div>
+              <div className="text-sm text-[hsl(var(--muted-foreground))] text-center">
+                Complete stages without hints for maximum points!
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         </div>
       </div>
     </EscapeRoomBackground>
