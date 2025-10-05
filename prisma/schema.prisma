@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model GameSession {
+  id          String   @id @default(cuid())
+  playerName  String
+  currentStage Int     @default(0)
+  timeLeft    Int     @default(1800) // 30 minutes in seconds
+  customTime  Int     @default(1800)
+  stagesCompleted String @default("[]") // JSON array of completed stage IDs
+  userCode    String  @default("")
+  isActive    Boolean @default(true)
+  gameMode    String  @default("normal")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("game_sessions")
+}
+
+model Stage {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  difficulty  String
+  timeLimit   Int    @default(300) // 5 minutes in seconds
+  testCases   String // JSON array of test cases
+  expectedOutput String
+  hints       String? // JSON array of hints
+  starterCode String // Incomplete code for students to work on
+  solution    String
+  order       Int    @unique
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("stages")
+}
+
+model LeaderboardEntry {
+  id              String   @id @default(cuid())
+  playerName      String
+  finalScore      Int
+  timeCompleted   Int      // Time remaining when completed
+  stagesCompleted Int      // Number of stages completed
+  gameMode        String   @default("normal")
+  createdAt       DateTime @default(now())
+
+  @@map("leaderboard")
+}
+
+model GameEvent {
+  id        String   @id @default(cuid())
+  sessionId String
+  eventType String   // 'stage_completed', 'game_started', 'game_ended', etc.
+  data      String?  // JSON data for the event
+  timestamp DateTime @default(now())
+
+  @@map("game_events")
+}

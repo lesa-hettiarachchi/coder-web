@@ -8,9 +8,19 @@ async function main() {
   // Create escape room stages
   const stages = [
     {
-      id: 1,
       title: 'Stage 1: Format the Code',
       description: 'Fix the indentation and formatting of this Python code:',
+      difficulty: 'easy',
+      timeLimit: 300,
+      testCases: JSON.stringify([
+        { input: '[1,2,3,4,5]', expected: '15' },
+        { input: '[10,20,30]', expected: '60' }
+      ]),
+      expectedOutput: '15',
+      hints: JSON.stringify([
+        'Add proper indentation (4 spaces)',
+        'Add spacing around operators'
+      ]),
       starterCode: `def calculate_sum(numbers):
 sum = 0
 for num in numbers:
@@ -26,96 +36,135 @@ print(result)`,
 
 result = calculate_sum([1, 2, 3, 4, 5])
 print(result)`,
-      hint: 'Add proper indentation (4 spaces) and spacing around operators',
-      difficulty: 'easy',
-      points: 100,
+      order: 1,
       isActive: true,
     },
     {
-      id: 2,
       title: 'Stage 2: Debug the Code',
       description: 'Find and fix the bug in this code:',
-      starterCode: `def find_maximum(arr):
-    max_val = 0
-    for num in arr:
-        if num > max_val:
-            max_val = num
-    return max_val
-
-print(find_maximum([5, 3, 9, 1, 7]))`,
-      solution: `def find_maximum(arr):
-    max_val = arr[0]
-    for num in arr:
-        if num > max_val:
-            max_val = num
-    return max_val
-
-print(find_maximum([5, 3, 9, 1, 7]))`,
-      hint: 'What if the array contains negative numbers? Initialize max_val with the first element.',
-      difficulty: 'medium',
-      points: 150,
-      isActive: true,
-    },
-    {
-      id: 3,
-      title: 'Stage 3: Generate Numbers',
-      description: 'Write code to generate all numbers from 0 to 1000:',
-      starterCode: `# Write your code here to generate numbers 0 to 1000
-`,
-      solution: `for i in range(1001):
-    print(i)`,
-      hint: 'Use a for loop with range(). Remember range(1001) goes from 0 to 1000.',
       difficulty: 'easy',
-      points: 100,
+      timeLimit: 300,
+      testCases: JSON.stringify([
+        { input: '5', expected: '120' },
+        { input: '3', expected: '6' }
+      ]),
+      expectedOutput: '120',
+      hints: JSON.stringify([
+        'Check the loop condition',
+        'Look at the multiplication logic'
+      ]),
+      starterCode: `def factorial(n):
+    # TODO: Fix this function
+    result = 1
+    for i in range(1, n):
+        result *= i
+    return result
+
+print(factorial(5))`,
+      solution: `def factorial(n):
+    result = 1
+    for i in range(1, n + 1):
+        result *= i
+    return result
+
+print(factorial(5))`,
+      order: 2,
       isActive: true,
     },
     {
-      id: 4,
+      title: 'Stage 3: Complete the Function',
+      description: 'Complete the missing part of this function:',
+      difficulty: 'medium',
+      timeLimit: 600,
+      testCases: JSON.stringify([
+        { input: '["hello", "world"]', expected: '["HELLO", "WORLD"]' },
+        { input: '["test", "case"]', expected: '["TEST", "CASE"]' }
+      ]),
+      expectedOutput: '["HELLO", "WORLD"]',
+      hints: JSON.stringify([
+        'Use the upper() method',
+        'Apply it to each string in the list'
+      ]),
+      starterCode: `def capitalize_words(words):
+    # TODO: Complete this function
+    result = []
+    for word in words:
+        # Add code here to capitalize each word
+        pass
+    return result
+
+words = ["hello", "world"]
+print(capitalize_words(words))`,
+      solution: `def capitalize_words(words):
+    result = []
+    for word in words:
+        result.append(word.upper())
+    return result
+
+words = ["hello", "world"]
+print(capitalize_words(words))`,
+      order: 3,
+      isActive: true,
+    },
+    {
       title: 'Stage 4: Data Conversion',
-      description: 'Convert this CSV data to JSON format:',
-      starterCode: `# Convert CSV to JSON
-csv_data = """name,age,city
-Alice,30,New York
-Bob,25,London
-Charlie,35,Tokyo"""
+      description: 'Convert the data from one format to another:',
+      difficulty: 'medium',
+      timeLimit: 600,
+      testCases: JSON.stringify([
+        { input: '{"name": "John", "age": 30}', expected: '[("name", "John"), ("age", 30)]' },
+        { input: '{"a": 1, "b": 2}', expected: '[("a", 1), ("b", 2)]' }
+      ]),
+      expectedOutput: '[("name", "John"), ("age", 30)]',
+      hints: JSON.stringify([
+        'Use dict.items() method',
+        'Convert to list of tuples'
+      ]),
+      starterCode: `import json
 
-# Write your conversion code here
-`,
-      solution: `csv_data = """name,age,city
-Alice,30,New York
-Bob,25,London
-Charlie,35,Tokyo"""
+def dict_to_tuples(json_str):
+    data = json.loads(json_str)
+    # TODO: Convert dictionary to list of tuples
+    return []
 
-lines = csv_data.strip().split('\\n')
-headers = lines[0].split(',')
-result = []
+data = '{"name": "John", "age": 30}'
+print(dict_to_tuples(data))`,
+      solution: `import json
 
-for line in lines[1:]:
-    values = line.split(',')
-    obj = {}
-    for i in range(len(headers)):
-        obj[headers[i]] = values[i]
-    result.append(obj)
+def dict_to_tuples(json_str):
+    data = json.loads(json_str)
+    return list(data.items())
 
-print(result)`,
-      hint: 'Split by newlines, extract headers, then create dictionaries for each row.',
-      difficulty: 'hard',
-      points: 200,
+data = '{"name": "John", "age": 30}'
+print(dict_to_tuples(data))`,
+      order: 4,
       isActive: true,
     },
     {
-      id: 5,
-      title: 'Stage 5: Algorithm Implementation',
-      description: 'Implement a binary search algorithm:',
-      starterCode: `# Implement binary search
-def binary_search(arr, target):
-    # Your code here
-    pass
+      title: 'Stage 5: Binary Search',
+      description: 'Implement binary search algorithm:',
+      difficulty: 'hard',
+      timeLimit: 900,
+      testCases: JSON.stringify([
+        { input: '[1,2,3,4,5], 3', expected: '2' },
+        { input: '[1,2,3,4,5], 6', expected: '-1' }
+      ]),
+      expectedOutput: '2',
+      hints: JSON.stringify([
+        'Use two pointers: left and right',
+        'Calculate middle index',
+        'Compare target with middle element'
+      ]),
+      starterCode: `def binary_search(arr, target):
+    # TODO: Implement binary search algorithm
+    
+        pass
+    
+    return -1
 
-# Test your implementation
-arr = [1, 3, 5, 7, 9, 11, 13, 15]
-print(binary_search(arr, 7))  # Should return 3
-print(binary_search(arr, 4))  # Should return -1`,
+arr = [1, 2, 3, 4, 5]
+target = 3
+print(binary_search(arr, target))`,
       solution: `def binary_search(arr, target):
     left, right = 0, len(arr) - 1
     
@@ -130,23 +179,23 @@ print(binary_search(arr, 4))  # Should return -1`,
     
     return -1
 
-# Test your implementation
-arr = [1, 3, 5, 7, 9, 11, 13, 15]
-print(binary_search(arr, 7))  # Should return 3
-print(binary_search(arr, 4))  # Should return -1`,
-      hint: 'Use two pointers (left and right) and compare the middle element with the target.',
-      difficulty: 'hard',
-      points: 250,
+arr = [1, 2, 3, 4, 5]
+target = 3
+print(binary_search(arr, target))`,
+      order: 5,
       isActive: true,
     },
   ];
 
-  // Clear existing stages
-  await prisma.escapeRoomStage.deleteMany({});
+  // Clear existing data
+  await prisma.stage.deleteMany();
+  await prisma.leaderboardEntry.deleteMany();
+  await prisma.gameSession.deleteMany();
+  await prisma.gameEvent.deleteMany();
 
   // Create new stages
   for (const stage of stages) {
-    await prisma.escapeRoomStage.create({
+    await prisma.stage.create({
       data: stage,
     });
   }
@@ -170,39 +219,28 @@ print(binary_search(arr, 4))  # Should return -1`,
       gameMode: 'normal',
     },
     {
-      playerName: 'DebugKing',
+      playerName: 'TestPlayer',
       finalScore: 750,
       timeCompleted: 1800,
       stagesCompleted: 4,
       gameMode: 'normal',
     },
-    {
-      playerName: 'SpeedCoder',
-      finalScore: 800,
-      timeCompleted: 900,
-      stagesCompleted: 4,
-      gameMode: 'speed',
-    },
   ];
 
-  // Clear existing leaderboard
-  await prisma.leaderboard.deleteMany({});
-
-  // Create leaderboard entries
+  // Create sample leaderboard entries
   for (const entry of leaderboardEntries) {
-    await prisma.leaderboard.create({
+    await prisma.leaderboardEntry.create({
       data: entry,
     });
   }
 
-  console.log(`✅ Created ${leaderboardEntries.length} leaderboard entries`);
-
-  console.log('🎉 Database seeded successfully!');
+  console.log(`Created ${leaderboardEntries.length} leaderboard entries`);
+  console.log('Database seeded successfully!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error seeding database:', e);
+    console.error('Error seeding database:', e);
     process.exit(1);
   })
   .finally(async () => {
