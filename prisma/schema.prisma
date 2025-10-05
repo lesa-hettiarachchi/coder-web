@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model EscapeRoomStage {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String
+  starterCode String
+  solution    String
+  hint        String
+  difficulty  String
+  points      Int
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("escape_room_stages")
+}
+
+model Leaderboard {
+  id               Int     @id @default(autoincrement())
+  playerName       String
+  finalScore       Int
+  timeCompleted    Int
+  stagesCompleted  Int
+  gameMode         String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("leaderboard")
+}
+
+model GameSession {
+  id               String   @id @default(cuid())
+  playerName       String?
+  timeLimit        Int
+  timeLeft         Int
+  currentStage     Int      @default(1)
+  stagesCompleted  String   @default("[]") // JSON array of completed stage IDs
+  userCode         String?
+  gameWon          Boolean  @default(false)
+  gameLost         Boolean  @default(false)
+  finalScore       Int?
+  endTime          DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  stageProgress    StageProgress[]
+  gameEvents       GameEvent[]
+
+  @@map("game_sessions")
+}
+
+model StageProgress {
+  id          Int      @id @default(autoincrement())
+  sessionId   String
+  stageId     Int
+  userCode    String
+  isCompleted Boolean  @default(false)
+  attempts    Int      @default(0)
+  hintsUsed   Int      @default(0)
+  timeSpent   Int      @default(0) // in seconds
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  session     GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, stageId])
+  @@map("stage_progress")
+}
+
+model GameEvent {
+  id        Int      @id @default(autoincrement())
+  sessionId String
+  eventType String
+  eventData String?  // JSON string
+  createdAt DateTime @default(now())
+
+  // Relations
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("game_events")
+}

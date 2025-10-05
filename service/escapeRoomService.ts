@@ -23,7 +23,10 @@ print(result)`,
 
 result = calculate_sum([1, 2, 3, 4, 5])
 print(result)`,
-    hint: "Add proper indentation (4 spaces) and spacing around operators"
+    hint: "Add proper indentation (4 spaces) and spacing around operators",
+    difficulty: "easy",
+    points: 100,
+    isActive: true
   },
   {
     id: 2,
@@ -45,7 +48,10 @@ print(find_maximum([5, 3, 9, 1, 7]))`,
     return max_val
 
 print(find_maximum([5, 3, 9, 1, 7]))`,
-    hint: "What if the array contains negative numbers? Initialize max_val with the first element."
+    hint: "What if the array contains negative numbers? Initialize max_val with the first element.",
+    difficulty: "medium",
+    points: 150,
+    isActive: true
   },
   {
     id: 3,
@@ -55,7 +61,10 @@ print(find_maximum([5, 3, 9, 1, 7]))`,
 `,
     solution: `for i in range(1001):
     print(i)`,
-    hint: "Use a for loop with range(). Remember range(1001) goes from 0 to 1000."
+    hint: "Use a for loop with range(). Remember range(1001) goes from 0 to 1000.",
+    difficulty: "easy",
+    points: 100,
+    isActive: true
   },
   {
     id: 4,
@@ -86,7 +95,10 @@ for line in lines[1:]:
     result.append(obj)
 
 print(result)`,
-    hint: "Split by newlines, extract headers, then create dictionaries for each row."
+    hint: "Split by newlines, extract headers, then create dictionaries for each row.",
+    difficulty: "hard",
+    points: 200,
+    isActive: true
   }
 ];
 

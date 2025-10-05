@@ -5,6 +5,9 @@ export interface EscapeRoomStage {
   starterCode: string;
   solution: string;
   hint: string;
+  difficulty: string;
+  points: number;
+  isActive: boolean;
 }
 
 export interface EscapeRoomGameState {
