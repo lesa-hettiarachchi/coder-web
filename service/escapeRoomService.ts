@@ -21,11 +21,11 @@ print(result)`,
         sum += num
     return sum
 
-result = calculate_sum([1, 2, 3, 4, 5])
+result = calculate_sum([1,2,3,4,5])
 print(result)`,
     hint: "Add proper indentation (4 spaces) and spacing around operators",
     difficulty: "easy",
-    points: 100,
+    points: 125,
     isActive: true
   },
   {
@@ -50,7 +50,7 @@ print(find_maximum([5, 3, 9, 1, 7]))`,
 print(find_maximum([5, 3, 9, 1, 7]))`,
     hint: "What if the array contains negative numbers? Initialize max_val with the first element.",
     difficulty: "medium",
-    points: 150,
+    points: 175,
     isActive: true
   },
   {
@@ -63,7 +63,7 @@ print(find_maximum([5, 3, 9, 1, 7]))`,
     print(i)`,
     hint: "Use a for loop with range(). Remember range(1001) goes from 0 to 1000.",
     difficulty: "easy",
-    points: 100,
+    points: 125,
     isActive: true
   },
   {
@@ -83,7 +83,7 @@ Alice,30,New York
 Bob,25,London
 Charlie,35,Tokyo"""
 
-lines = csv_data.strip().split('\\n')
+lines = csv_data.strip().split('\n')
 headers = lines[0].split(',')
 result = []
 
@@ -97,7 +97,7 @@ for line in lines[1:]:
 print(result)`,
     hint: "Split by newlines, extract headers, then create dictionaries for each row.",
     difficulty: "hard",
-    points: 200,
+    points: 225,
     isActive: true
   }
 ];

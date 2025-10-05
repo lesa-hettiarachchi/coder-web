@@ -23,6 +23,7 @@ export interface EscapeRoomGameState {
   currentPoints: number;
   hintsUsed: number[];
   showHint: boolean;
+  playerName: string;
 }
 
 export interface EscapeRoomGameData {

@@ -185,6 +185,16 @@ export const escapeRoomDatabaseService = {
     }
   },
 
+  async clearLeaderboard() {
+    try {
+      await prisma.leaderboard.deleteMany({});
+      return true;
+    } catch (error) {
+      console.error('Failed to clear leaderboard:', error);
+      throw error;
+    }
+  },
+
   // Escape Room Stages Management
   async getEscapeRoomStages() {
     try {

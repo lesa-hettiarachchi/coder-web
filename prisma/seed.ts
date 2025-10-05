@@ -202,7 +202,7 @@ print(binary_search(arr, 4))  # Should return -1`,
 
 main()
   .catch((e) => {
-    console.error('❌ Error seeding database:', e);
+    console.error('Error seeding database:', e);
     process.exit(1);
   })
   .finally(async () => {

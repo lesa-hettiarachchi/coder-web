@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw, ChevronLeft, ChevronRight, Lightbulb, Star } from 'lucide-react';
 import { useEscapeRoom } from '@/hooks/useEscapeRoom';
 import { EscapeRoomBackground } from './EscapeRoomBackground';
+import { Leaderboard } from './Leaderboard';
 
 export const EscapeRoomGame: React.FC = () => {
+  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
+  
   const {
     gameState,
     stages,
@@ -15,6 +18,7 @@ export const EscapeRoomGame: React.FC = () => {
     startGame,
     resetGame,
     updateCustomTime,
+    updatePlayerName,
     updateUserCode,
     checkSolution,
     goToNextStage,
@@ -24,6 +28,17 @@ export const EscapeRoomGame: React.FC = () => {
     getCurrentStage,
     getCurrentStagePoints
   } = useEscapeRoom();
+
+  // Auto-show leaderboard when game ends
+  React.useEffect(() => {
+    if (gameState.gameWon || gameState.gameLost) {
+      // Small delay to let the game state settle
+      const timer = setTimeout(() => {
+        setShowLeaderboard(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.gameWon, gameState.gameLost]);
 
   if (!isLoaded) {
     return (
@@ -66,48 +81,60 @@ export const EscapeRoomGame: React.FC = () => {
                     <span className="text-[hsl(var(--primary))] mr-2">•</span>
                     Complete 4 coding challenges to escape
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-[hsl(var(--primary))] mr-2">•</span>
-                    Format code correctly
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-[hsl(var(--primary))] mr-2">•</span>
-                    Debug broken code
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-[hsl(var(--primary))] mr-2">•</span>
-                    Generate number sequences
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-[hsl(var(--primary))] mr-2">•</span>
-                    Convert data formats
-                  </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[hsl(var(--foreground))]">
-                Set Timer (minutes):
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={gameState.customTime}
-                onChange={(e) => updateCustomTime(parseInt(e.target.value) || 30)}
-                className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[hsl(var(--foreground))]">
+                  Enter Your Name:
+                </label>
+                <input
+                  type="text"
+                  placeholder="Your name for the leaderboard"
+                  value={gameState.playerName}
+                  onChange={(e) => updatePlayerName(e.target.value)}
+                  className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[hsl(var(--foreground))]">
+                  Set Timer (minutes):
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={gameState.customTime}
+                  onChange={(e) => updateCustomTime(parseInt(e.target.value) || 30)}
+                  className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                />
+              </div>
             </div>
 
-            <Button
-              onClick={startGame}
-              className="w-full"
-              size="lg"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Start Challenge
-            </Button>
+            <div className="space-y-4">
+              <Button
+                onClick={startGame}
+                className="w-full"
+                size="lg"
+                disabled={!gameState.playerName.trim()}
+              >
+                <Play className="w-4 h-4 mr-2" />
+                {!gameState.playerName.trim() ? 'Enter your name to start' : 'Start Challenge'}
+              </Button>
+              
+              <Button
+                onClick={() => setShowLeaderboard(true)}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                <Trophy className="w-4 h-4 mr-2" />
+                View Leaderboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
         </div>
@@ -118,74 +145,114 @@ export const EscapeRoomGame: React.FC = () => {
   // Game won - show victory screen
   if (gameState.gameWon) {
     return (
-      <EscapeRoomBackground gameState="won">
-        <div className="flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full">
-          <CardHeader className="text-center">
-            <Trophy className="w-32 h-32 mx-auto text-yellow-500 mb-4 animate-bounce" />
-            <CardTitle className="text-5xl font-bold text-green-600">YOU ESCAPED!</CardTitle>
-            <CardDescription className="text-2xl">
-              Time Remaining: {formatTime(gameState.timeLeft)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <Card className="bg-[hsl(var(--muted))]">
-              <CardHeader>
-                <CardTitle>Stages Completed:</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {stages.map((stage) => (
-                    <div key={stage.id} className="flex items-center text-green-600">
-                      <CheckCircle className="w-5 h-5 mr-2" />
-                      <span className="text-sm">{stage.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+      <>
+        <EscapeRoomBackground gameState="won">
+          <div className="flex items-center justify-center p-4">
+            <Card className="max-w-2xl w-full">
+            <CardHeader className="text-center">
+              <Trophy className="w-32 h-32 mx-auto text-yellow-500 mb-4 animate-bounce" />
+              <CardTitle className="text-5xl font-bold text-green-600">YOU ESCAPED!</CardTitle>
+              <CardDescription className="text-2xl">
+                Time Remaining: {formatTime(gameState.timeLeft)}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Card className="bg-[hsl(var(--muted))]">
+                <CardHeader>
+                  <CardTitle>Stages Completed:</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    {stages.map((stage) => (
+                      <div key={stage.id} className="flex items-center text-green-600">
+                        <CheckCircle className="w-5 h-5 mr-2" />
+                        <span className="text-sm">{stage.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Button
-              onClick={resetGame}
-              className="w-full"
-              size="lg"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Play Again
-            </Button>
-          </CardContent>
-        </Card>
-        </div>
-      </EscapeRoomBackground>
+              <div className="space-y-4">
+                <Button
+                  onClick={resetGame}
+                  className="w-full"
+                  size="lg"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Play Again
+                </Button>
+                
+                <Button
+                  onClick={() => setShowLeaderboard(true)}
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                >
+                  <Trophy className="w-4 h-4 mr-2" />
+                  View Your Position on Leaderboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          </div>
+        </EscapeRoomBackground>
+        
+        {/* Auto-show leaderboard when game is won */}
+        <Leaderboard 
+          isOpen={showLeaderboard} 
+          onClose={() => setShowLeaderboard(false)}
+          currentPlayerName={gameState.playerName}
+        />
+      </>
     );
   }
 
   // Game lost - show failure screen
   if (gameState.gameLost) {
     return (
-      <EscapeRoomBackground gameState="lost">
-        <div className="flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full">
-          <CardHeader className="text-center">
-            <AlertCircle className="w-32 h-32 mx-auto text-red-500 mb-4" />
-            <CardTitle className="text-5xl font-bold text-red-600">GAME OVER</CardTitle>
-            <CardDescription className="text-xl">
-              {gameState.feedback}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={resetGame}
-              className="w-full"
-              size="lg"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-        </div>
-      </EscapeRoomBackground>
+      <>
+        <EscapeRoomBackground gameState="lost">
+          <div className="flex items-center justify-center p-4">
+            <Card className="max-w-2xl w-full">
+            <CardHeader className="text-center">
+              <AlertCircle className="w-32 h-32 mx-auto text-red-500 mb-4" />
+              <CardTitle className="text-5xl font-bold text-red-600">GAME OVER</CardTitle>
+              <CardDescription className="text-xl">
+                {gameState.feedback}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                onClick={resetGame}
+                className="w-full"
+                size="lg"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+              
+              <Button
+                onClick={() => setShowLeaderboard(true)}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                <Trophy className="w-4 h-4 mr-2" />
+                View Your Position on Leaderboard
+              </Button>
+            </CardContent>
+          </Card>
+          </div>
+        </EscapeRoomBackground>
+        
+        {/* Auto-show leaderboard when game is lost */}
+        <Leaderboard 
+          isOpen={showLeaderboard} 
+          onClose={() => setShowLeaderboard(false)}
+          currentPlayerName={gameState.playerName}
+        />
+      </>
     );
   }
 
@@ -195,9 +262,10 @@ export const EscapeRoomGame: React.FC = () => {
   if (!currentStage) return null;
 
   return (
-    <EscapeRoomBackground gameState="playing">
-      <div className="p-4">
-        <div className="max-w-6xl mx-auto space-y-4">
+    <>
+      <EscapeRoomBackground gameState="playing">
+        <div className="p-4">
+          <div className="max-w-6xl mx-auto space-y-4">
         {/* Header */}
         <Card className="border-2 border-[hsl(var(--destructive))]">
           <CardContent className="p-4">
@@ -359,6 +427,21 @@ export const EscapeRoomGame: React.FC = () => {
               <textarea
                 value={gameState.userCode}
                 onChange={(e) => updateUserCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const textarea = e.target as HTMLTextAreaElement;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const value = textarea.value;
+                    const newValue = value.substring(0, start) + '    ' + value.substring(end);
+                    updateUserCode(newValue);
+                    // Set cursor position after the inserted spaces
+                    setTimeout(() => {
+                      textarea.selectionStart = textarea.selectionEnd = start + 4;
+                    }, 0);
+                  }
+                }}
                 className="w-full h-96 bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] font-mono p-4 rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] resize-none"
                 spellCheck="false"
                 placeholder="Write your code here..."
@@ -370,9 +453,19 @@ export const EscapeRoomGame: React.FC = () => {
         {/* Leaderboard */}
         <Card className="mt-4">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-              Leaderboard
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
+                Leaderboard
+              </div>
+              <Button
+                onClick={() => setShowLeaderboard(true)}
+                variant="outline"
+                size="sm"
+              >
+                <Trophy className="w-4 h-4 mr-2" />
+                View Leaderboard
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -387,8 +480,16 @@ export const EscapeRoomGame: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+          </div>
         </div>
-      </div>
-    </EscapeRoomBackground>
+      </EscapeRoomBackground>
+      
+      {/* Leaderboard Modal */}
+      <Leaderboard 
+        isOpen={showLeaderboard} 
+        onClose={() => setShowLeaderboard(false)}
+        currentPlayerName={gameState.playerName}
+      />
+    </>
   );
 };

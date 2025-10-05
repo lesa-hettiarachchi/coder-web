@@ -19,9 +19,10 @@ interface LeaderboardEntry {
 interface LeaderboardProps {
   isOpen: boolean;
   onClose: () => void;
+  currentPlayerName?: string;
 }
 
-export const Leaderboard: React.FC<LeaderboardProps> = ({ isOpen, onClose }) => {
+export const Leaderboard: React.FC<LeaderboardProps> = ({ isOpen, onClose, currentPlayerName }) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,19 +142,30 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ isOpen, onClose }) => 
             </div>
           ) : (
             <div className="space-y-2">
-              {leaderboard.map((entry, index) => (
-                <div
-                  key={entry.id}
-                  className={`flex items-center justify-between p-4 rounded-lg border ${
-                    index < 3 
-                      ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 dark:from-yellow-900/20 dark:to-orange-900/20 dark:border-yellow-700'
-                      : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                  }`}
-                >
+              {leaderboard.map((entry, index) => {
+                const isCurrentPlayer = currentPlayerName && entry.playerName === currentPlayerName;
+                return (
+                  <div
+                    key={entry.id}
+                    className={`flex items-center justify-between p-4 rounded-lg border ${
+                      isCurrentPlayer
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300 dark:from-blue-900/30 dark:to-indigo-900/30 dark:border-blue-600 ring-2 ring-blue-400 dark:ring-blue-500'
+                        : index < 3 
+                          ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 dark:from-yellow-900/20 dark:to-orange-900/20 dark:border-yellow-700'
+                          : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
                   <div className="flex items-center space-x-4">
                     {getRankIcon(index)}
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{entry.playerName}</h3>
+                      <h3 className={`font-semibold text-lg ${isCurrentPlayer ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+                        {entry.playerName}
+                        {isCurrentPlayer && (
+                          <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full">
+                            YOU
+                          </span>
+                        )}
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <div className="flex items-center space-x-4">
                           <span className="flex items-center">
@@ -183,7 +195,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ isOpen, onClose }) => 
                     <div className="text-sm text-gray-500">points</div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

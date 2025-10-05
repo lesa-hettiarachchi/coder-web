@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { EscapeRoomGameState, EscapeRoomStage, EscapeRoomAction } from '@/types/escapeRoom';
+import { EscapeRoomGameState, EscapeRoomStage } from '@/types/escapeRoom';
 import { escapeRoomService } from '@/service/escapeRoomService';
 
 export const useEscapeRoom = () => {
   const [gameState, setGameState] = useState<EscapeRoomGameState>({
-    timeLeft: 1800, // 30 minutes default
-    customTime: 30,
+    timeLeft: 600, // 10 minutes default
+    customTime: 10,
     timerStarted: false,
     currentStage: 0,
     userCode: '',
@@ -17,7 +17,8 @@ export const useEscapeRoom = () => {
     gameLost: false,
     currentPoints: 0,
     hintsUsed: [],
-    showHint: false
+    showHint: false,
+    playerName: ''
   });
 
   const [stages, setStages] = useState<EscapeRoomStage[]>([]);
@@ -35,7 +36,7 @@ export const useEscapeRoom = () => {
     }
   }, []);
 
-  // Timer effect
+  // Timer effect & Game Lost Logic
   useEffect(() => {
     if (gameState.timerStarted && gameState.timeLeft > 0 && !gameState.gameWon && !gameState.gameLost) {
       const timer = setTimeout(() => {
@@ -51,41 +52,91 @@ export const useEscapeRoom = () => {
         gameLost: true,
         feedback: "Time's up! You failed to escape. Try again!"
       }));
+
+      if (gameState.playerName.trim()) {
+        console.log('Saving to leaderboard - game lost');
+        const timeCompleted = gameState.customTime * 60;
+        saveToLeaderboard(gameState.currentPoints, timeCompleted);
+      }
     }
   }, [gameState.timeLeft, gameState.timerStarted, gameState.gameWon, gameState.gameLost]);
 
-  // Check for game completion
+  const saveToLeaderboard = useCallback(async (finalScore: number, timeCompleted: number) => {
+    console.log('🚀 Attempting to save to leaderboard:', {
+      playerName: gameState.playerName,
+      finalScore,
+      timeCompleted,
+      stagesCompleted: gameState.stagesCompleted.length
+    });
+    
+    try {
+      const url = '/api/escape-room/leaderboard';
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerName: gameState.playerName,
+          finalScore,
+          timeCompleted,
+          stagesCompleted: gameState.stagesCompleted.length,
+          gameMode: 'normal'
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Failed to save to leaderboard:', response.status, errorText);
+      } else {
+        const result = await response.json();
+        console.log('✅ Successfully saved to leaderboard:', result);
+      }
+    } catch (error) {
+      console.error('💥 Error saving to leaderboard:', error);
+    }
+  }, [gameState.playerName, gameState.stagesCompleted.length]);
+
+  // Game completion and save logic (Game Won)
   useEffect(() => {
-    if (gameState.stagesCompleted.length === stages.length && stages.length > 0) {
+    if (gameState.stagesCompleted.length === stages.length && stages.length > 0 && !gameState.gameWon) {
+      console.log('🎉 Game completed! Calculating final score and saving...');
+
+      const timeBonus = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 100);
+      const finalScore = gameState.currentPoints + timeBonus;
+      const timeCompleted = gameState.customTime * 60 - gameState.timeLeft;
+
       setGameState(prev => ({
         ...prev,
         gameWon: true,
-        feedback: "Congratulations! You've escaped the room!"
+        currentPoints: finalScore,
+        feedback: `Congratulations! You've escaped the room! Final Score: ${finalScore} (${prev.currentPoints} + ${timeBonus} time bonus)`
       }));
+
+      if (gameState.playerName.trim()) {
+        console.log('🏆 Saving to leaderboard - game won');
+        saveToLeaderboard(finalScore, timeCompleted);
+      }
     }
-  }, [gameState.stagesCompleted.length, stages.length]);
+  }, [gameState.stagesCompleted.length, stages.length, gameState.gameWon, gameState.currentPoints, gameState.timeLeft, gameState.customTime, gameState.playerName, saveToLeaderboard]);
 
   const startGame = useCallback(() => {
-    try {
-      const newGame = escapeRoomService.createNewGame();
-      setGameState({
-        timeLeft: gameState.customTime * 60,
-        customTime: gameState.customTime,
-        timerStarted: true,
-        currentStage: 0,
-        userCode: stages[0]?.starterCode || '',
-        feedback: '',
-        stagesCompleted: [],
-        gameWon: false,
-        gameLost: false,
-        currentPoints: 0,
-        hintsUsed: [],
-        showHint: false
-      });
-    } catch (error) {
-      console.error('Failed to start game:', error);
-    }
-  }, [gameState.customTime, stages]);
+    setGameState({
+      timeLeft: gameState.customTime * 60,
+      customTime: gameState.customTime,
+      timerStarted: true,
+      currentStage: 0,
+      userCode: stages[0]?.starterCode || '',
+      feedback: '',
+      stagesCompleted: [],
+      gameWon: false,
+      gameLost: false,
+      currentPoints: 0,
+      hintsUsed: [],
+      showHint: false,
+      playerName: gameState.playerName
+    });
+  }, [gameState.customTime, gameState.playerName, stages]);
 
   const resetGame = useCallback(() => {
     setGameState({
@@ -100,10 +151,11 @@ export const useEscapeRoom = () => {
       gameLost: false,
       currentPoints: 0,
       hintsUsed: [],
-      showHint: false
+      showHint: false,
+      playerName: gameState.playerName
     });
     escapeRoomService.clearGameData();
-  }, []);
+  }, [gameState.playerName]);
 
   const updateCustomTime = useCallback((minutes: number) => {
     setGameState(prev => ({
@@ -118,47 +170,57 @@ export const useEscapeRoom = () => {
       userCode: code
     }));
   }, []);
+  
+  const updatePlayerName = useCallback((name: string) => {
+    setGameState(prev => ({
+      ...prev,
+      playerName: name
+    }));
+  }, []);
 
+  // --- FIX APPLIED HERE ---
+  // Enhanced normalizeCode function for more flexible checking.
   const normalizeCode = useCallback((code: string): string => {
-    return code.trim().replace(/\s+/g, ' ').toLowerCase();
+    return code
+      .trim()
+      .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+      .replace(/[,\[\]]/g, ' ') // Normalize array formatting
+      .replace(/\s*,\s*/g, ',') // Normalize comma spacing
+      .toLowerCase();
   }, []);
 
   const checkSolution = useCallback(() => {
-    if (!stages[gameState.currentStage]) return;
-
     const currentStageData = stages[gameState.currentStage];
+    if (!currentStageData || gameState.stagesCompleted.includes(currentStageData.id)) return;
+
+    // --- FIX APPLIED HERE ---
+    // Enhanced flexible checking logic with multiple matching strategies.
     const userNormalized = normalizeCode(gameState.userCode);
     const solutionNormalized = normalizeCode(currentStageData.solution);
+    
+    // Try multiple matching strategies
+    const isCorrect = 
+      userNormalized.includes(solutionNormalized) || 
+      solutionNormalized.includes(userNormalized) ||
+      // Check for key components in the solution
+      (currentStageData.id === 1 && userNormalized.includes('def calculate_sum') && userNormalized.includes('for num in numbers') && userNormalized.includes('sum += num')) ||
+      (currentStageData.id === 4 && userNormalized.includes('split') && userNormalized.includes('headers') && userNormalized.includes('result'));
 
-    // More flexible checking - allow variations
-    const isCorrect = userNormalized.includes(solutionNormalized.substring(0, 50)) || 
-                     solutionNormalized.includes(userNormalized.substring(0, 50));
-
-    if (gameState.userCode.trim() === currentStageData.solution.trim() || isCorrect) {
-      const newStagesCompleted = [...gameState.stagesCompleted, currentStageData.id];
-      
-      // Calculate time bonus: (timeLeft / timeLimit) * 50 bonus points
-      const timeBonus = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 50);
+    if (isCorrect) {
+      const newStagesCompleted = [...new Set([...gameState.stagesCompleted, currentStageData.id])];
       const hintPenalty = gameState.hintsUsed.includes(currentStageData.id) ? 20 : 0;
-      const stagePoints = currentStageData.points - hintPenalty + timeBonus;
+      const stagePoints = currentStageData.points - hintPenalty;
       
       setGameState(prev => ({
         ...prev,
-        feedback: `✓ Correct! +${stagePoints} points (${currentStageData.points - hintPenalty} base + ${timeBonus} time bonus)`,
+        feedback: `✓ Correct! +${stagePoints} points (${currentStageData.points} base${hintPenalty > 0 ? ` - ${hintPenalty} hint penalty` : ''})`,
         stagesCompleted: newStagesCompleted,
         currentPoints: prev.currentPoints + stagePoints
       }));
 
-      // Move to next stage after delay
       setTimeout(() => {
         if (gameState.currentStage < stages.length - 1) {
-          setGameState(prev => ({
-            ...prev,
-            currentStage: prev.currentStage + 1,
-            userCode: stages[gameState.currentStage + 1]?.starterCode || '',
-            feedback: '',
-            showHint: false
-          }));
+          goToNextStage();
         }
       }, 1500);
     } else {
@@ -169,24 +231,14 @@ export const useEscapeRoom = () => {
     }
   }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, gameState.hintsUsed, stages, normalizeCode]);
 
-  const skipStage = useCallback(() => {
-    if (gameState.currentStage < stages.length - 1) {
-      setGameState(prev => ({
-        ...prev,
-        currentStage: prev.currentStage + 1,
-        userCode: stages[gameState.currentStage + 1]?.starterCode || '',
-        feedback: ''
-      }));
-    }
-  }, [gameState.currentStage, stages]);
-
   const goToNextStage = useCallback(() => {
     if (gameState.currentStage < stages.length - 1) {
       setGameState(prev => ({
         ...prev,
         currentStage: prev.currentStage + 1,
-        userCode: stages[gameState.currentStage + 1]?.starterCode || '',
-        feedback: ''
+        userCode: stages[prev.currentStage + 1]?.starterCode || '',
+        feedback: '',
+        showHint: false
       }));
     }
   }, [gameState.currentStage, stages]);
@@ -196,7 +248,7 @@ export const useEscapeRoom = () => {
       setGameState(prev => ({
         ...prev,
         currentStage: prev.currentStage - 1,
-        userCode: stages[gameState.currentStage - 1]?.starterCode || '',
+        userCode: stages[prev.currentStage - 1]?.starterCode || '',
         feedback: '',
         showHint: false
       }));
@@ -211,7 +263,6 @@ export const useEscapeRoom = () => {
       ...prev,
       showHint: true,
       hintsUsed: [...prev.hintsUsed, currentStageData.id],
-      currentPoints: Math.max(0, prev.currentPoints - 20), // Deduct points immediately
       feedback: `Hint used! -20 points deducted.`
     }));
   }, [gameState.currentStage, gameState.hintsUsed, stages]);
@@ -248,9 +299,9 @@ export const useEscapeRoom = () => {
     startGame,
     resetGame,
     updateCustomTime,
+    updatePlayerName,
     updateUserCode,
     checkSolution,
-    skipStage,
     goToNextStage,
     goToPreviousStage,
     useHint,
