@@ -10,7 +10,7 @@ import { Leaderboard } from './Leaderboard';
 
 export const EscapeRoomGame: React.FC = () => {
   const [showLeaderboard, setShowLeaderboard] = React.useState(false);
-  
+
   const {
     gameState,
     stages,
@@ -32,7 +32,6 @@ export const EscapeRoomGame: React.FC = () => {
   // Auto-show leaderboard when game ends
   React.useEffect(() => {
     if (gameState.gameWon || gameState.gameLost) {
-      // Small delay to let the game state settle
       const timer = setTimeout(() => {
         setShowLeaderboard(true);
       }, 1000);
@@ -60,85 +59,93 @@ export const EscapeRoomGame: React.FC = () => {
   // Game not started - show start screen
   if (!gameState.timerStarted) {
     return (
-      <EscapeRoomBackground gameState="start">
-        <div className="flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full">
-          <CardHeader className="text-center">
-            <Lock className="w-20 h-20 mx-auto text-[hsl(var(--primary))] mb-4" />
-            <CardTitle className="text-4xl font-bold">Code Escape Room</CardTitle>
-            <CardDescription className="text-lg">
-              Can you code your way out?
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <Card className="bg-[hsl(var(--muted))]">
-              <CardHeader>
-                <CardTitle>The Challenge</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-[hsl(var(--muted-foreground))]">
-                  <li className="flex items-start">
-                    <span className="text-[hsl(var(--primary))] mr-2">•</span>
-                    Complete 4 coding challenges to escape
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+      <>
+        <EscapeRoomBackground gameState="start">
+          <div className="flex items-center justify-center p-4">
+            <Card className="max-w-2xl w-full">
+            <CardHeader className="text-center">
+              <Lock className="w-20 h-20 mx-auto text-[hsl(var(--primary))] mb-4" />
+              <CardTitle className="text-4xl font-bold">Code Escape Room</CardTitle>
+              <CardDescription className="text-lg">
+                Can you code your way out?
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Card className="bg-[hsl(var(--muted))]">
+                <CardHeader>
+                  <CardTitle>The Challenge</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-[hsl(var(--muted-foreground))]">
+                    <li className="flex items-start">
+                      <span className="text-[hsl(var(--primary))] mr-2">•</span>
+                      Complete 4 coding challenges to escape
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  Enter Your Name:
-                </label>
-                <input
-                  type="text"
-                  placeholder="Your name for the leaderboard"
-                  value={gameState.playerName}
-                  onChange={(e) => updatePlayerName(e.target.value)}
-                  className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[hsl(var(--foreground))]">
+                    Enter Your Name:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Your name for the leaderboard"
+                    value={gameState.playerName}
+                    onChange={(e) => updatePlayerName(e.target.value)}
+                    className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[hsl(var(--foreground))]">
+                    Set Timer (minutes):
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={gameState.customTime}
+                    onChange={(e) => updateCustomTime(parseInt(e.target.value) || 30)}
+                    className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                  />
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  Set Timer (minutes):
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={gameState.customTime}
-                  onChange={(e) => updateCustomTime(parseInt(e.target.value) || 30)}
-                  className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
-                />
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <Button
-                onClick={startGame}
-                className="w-full"
-                size="lg"
-                disabled={!gameState.playerName.trim()}
-              >
-                <Play className="w-4 h-4 mr-2" />
-                {!gameState.playerName.trim() ? 'Enter your name to start' : 'Start Challenge'}
-              </Button>
-              
-              <Button
-                onClick={() => setShowLeaderboard(true)}
-                variant="outline"
-                className="w-full"
-                size="lg"
-              >
-                <Trophy className="w-4 h-4 mr-2" />
-                View Leaderboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-      </EscapeRoomBackground>
+              <div className="space-y-4">
+                <Button
+                  onClick={startGame}
+                  className="w-full"
+                  size="lg"
+                  disabled={!gameState.playerName.trim()}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  {!gameState.playerName.trim() ? 'Enter your name to start' : 'Start Challenge'}
+                </Button>
+                
+                <Button
+                  onClick={() => setShowLeaderboard(true)}
+                  variant="outline"
+                  className="w-full"
+                  size="lg"
+                >
+                  <Trophy className="w-4 h-4 mr-2" />
+                  View Leaderboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          </div>
+        </EscapeRoomBackground>
+
+        <Leaderboard 
+          isOpen={showLeaderboard} 
+          onClose={() => setShowLeaderboard(false)}
+          currentPlayerName={gameState.playerName}
+        />
+      </>
     );
   }
 
@@ -198,7 +205,6 @@ export const EscapeRoomGame: React.FC = () => {
           </div>
         </EscapeRoomBackground>
         
-        {/* Auto-show leaderboard when game is won */}
         <Leaderboard 
           isOpen={showLeaderboard} 
           onClose={() => setShowLeaderboard(false)}
@@ -239,14 +245,13 @@ export const EscapeRoomGame: React.FC = () => {
                 size="lg"
               >
                 <Trophy className="w-4 h-4 mr-2" />
-                View Your Position on Leaderboard
+                View Leaderboard
               </Button>
             </CardContent>
           </Card>
           </div>
         </EscapeRoomBackground>
         
-        {/* Auto-show leaderboard when game is lost */}
         <Leaderboard 
           isOpen={showLeaderboard} 
           onClose={() => setShowLeaderboard(false)}
@@ -273,11 +278,12 @@ export const EscapeRoomGame: React.FC = () => {
               <div className="flex items-center">
                 <Lock className="w-8 h-8 text-[hsl(var(--destructive))] mr-3" />
                 <div>
-                  <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Code Escape Room</h1>
-                  <p className="text-[hsl(var(--muted-foreground))]">Complete all stages to escape!</p>
+                  <h1 className="text-2xl font-bold text-red-700 text-[hsl(var(--foreground))]">Escape Room</h1>
+                  <p className="text-[hsl(var(--muted-foreground))]">Hey {gameState.playerName}, Complete all stages to escape!</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-6">
+              {/* --- UI CHANGE APPLIED HERE --- */}
+              <div className="flex items-center space-x-4 md:space-x-6">
                 <div className="text-center">
                   <Clock className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
                   <p className={`text-2xl font-bold ${gameState.timeLeft < 300 ? 'text-red-500' : 'text-[hsl(var(--foreground))]'}`}>
@@ -295,8 +301,17 @@ export const EscapeRoomGame: React.FC = () => {
                   <p className="text-2xl font-bold text-yellow-500">
                     {gameState.currentPoints}
                   </p>
-                  <p className="text-[hsl(var(--muted-foreground))] text-sm">Points</p>
                 </div>
+                {/* --- ADDED: Leaderboard Button --- */}
+                <Button
+                  onClick={() => setShowLeaderboard(true)}
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex" // Hides on small screens, shows on medium and up
+                >
+                  <Trophy className="w-4 h-4 mr-2" />
+                  Leaderboard
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -317,7 +332,7 @@ export const EscapeRoomGame: React.FC = () => {
                   </div>
                   {idx < stages.length - 1 && (
                     <div className={`w-12 h-1 ${
-                      gameState.stagesCompleted.includes(stage.id) && gameState.stagesCompleted.includes(stages[idx + 1]?.id) ? 'bg-green-500' : 'bg-[hsl(var(--muted))]'
+                      gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500' : 'bg-[hsl(var(--muted))]'
                     }`} />
                   )}
                 </div>
@@ -343,9 +358,6 @@ export const EscapeRoomGame: React.FC = () => {
                     <div className="text-sm text-yellow-600 dark:text-yellow-400 font-semibold">Points Available</div>
                     <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
                       {stagePoints.total}
-                    </div>
-                    <div className="text-xs text-yellow-600 dark:text-yellow-400">
-                      {stagePoints.base} base + {stagePoints.timeBonus} time bonus
                     </div>
                   </div>
                 </div>
@@ -436,7 +448,6 @@ export const EscapeRoomGame: React.FC = () => {
                     const value = textarea.value;
                     const newValue = value.substring(0, start) + '    ' + value.substring(end);
                     updateUserCode(newValue);
-                    // Set cursor position after the inserted spaces
                     setTimeout(() => {
                       textarea.selectionStart = textarea.selectionEnd = start + 4;
                     }, 0);
@@ -450,41 +461,11 @@ export const EscapeRoomGame: React.FC = () => {
           </Card>
         </div>
 
-        {/* Leaderboard */}
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-                Leaderboard
-              </div>
-              <Button
-                onClick={() => setShowLeaderboard(true)}
-                variant="outline"
-                size="sm"
-              >
-                <Trophy className="w-4 h-4 mr-2" />
-                View Leaderboard
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-2 bg-[hsl(var(--muted))] rounded">
-                <span className="font-semibold">Your Score</span>
-                <span className="text-yellow-500 font-bold">{gameState.currentPoints} points</span>
-              </div>
-              <div className="text-sm text-[hsl(var(--muted-foreground))] text-center">
-                Complete stages without hints for maximum points!
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
           </div>
         </div>
       </EscapeRoomBackground>
       
-      {/* Leaderboard Modal */}
       <Leaderboard 
         isOpen={showLeaderboard} 
         onClose={() => setShowLeaderboard(false)}
