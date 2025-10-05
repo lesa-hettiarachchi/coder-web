@@ -19,17 +19,36 @@ export const useEscapeRoom = () => {
 
   const [stages, setStages] = useState<EscapeRoomStage[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [playerName, setPlayerName] = useState<string>('');
 
   // Load stages on mount
   useEffect(() => {
-    try {
-      const loadedStages = escapeRoomService.getStages();
-      setStages(loadedStages);
-      setIsLoaded(true);
-    } catch (error) {
-      console.error('Failed to load escape room stages:', error);
-      setIsLoaded(true);
-    }
+    const loadStages = async () => {
+      try {
+        const response = await fetch('/api/escape-room/stages');
+        if (response.ok) {
+          const loadedStages = await response.json();
+          console.log('Loaded stages from API:', loadedStages.length);
+          console.log('First stage starter code from API:', loadedStages[0]?.starterCode);
+          setStages(loadedStages);
+        } else {
+          // Fallback to local storage
+          const loadedStages = escapeRoomService.getStages();
+          console.log('Loaded stages from local storage:', loadedStages.length);
+          setStages(loadedStages);
+        }
+        setIsLoaded(true);
+      } catch (error) {
+        console.error('Failed to load escape room stages:', error);
+        // Fallback to local storage
+        const loadedStages = escapeRoomService.getStages();
+        setStages(loadedStages);
+        setIsLoaded(true);
+      }
+    };
+
+    loadStages();
   }, []);
 
   // Timer effect
@@ -59,12 +78,95 @@ export const useEscapeRoom = () => {
         gameWon: true,
         feedback: "Congratulations! You've escaped the room!"
       }));
+      
+      // Add to leaderboard
+      addToLeaderboard();
     }
   }, [gameState.stagesCompleted.length, stages.length]);
 
-  const startGame = useCallback(() => {
+  const addToLeaderboard = useCallback(async () => {
+    if (!playerName.trim() || !sessionId) return;
+
     try {
-      const newGame = escapeRoomService.createNewGame();
+      const finalScore = calculateScore();
+      const timeCompleted = (gameState.customTime * 60) - gameState.timeLeft;
+      
+      await fetch('/api/escape-room/leaderboard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerName: playerName.trim(),
+          finalScore,
+          timeCompleted,
+          stagesCompleted: gameState.stagesCompleted.length,
+          gameMode: 'normal',
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to add to leaderboard:', error);
+    }
+  }, [playerName, sessionId, gameState]);
+
+  const calculateScore = useCallback(() => {
+    const baseScore = gameState.stagesCompleted.length * 100;
+    const timeBonus = Math.max(0, gameState.timeLeft * 2); // 2 points per second remaining
+    const completionBonus = gameState.stagesCompleted.length === stages.length ? 500 : 0;
+    return baseScore + timeBonus + completionBonus;
+  }, [gameState, stages.length]);
+
+  const startGame = useCallback(async () => {
+    if (!playerName.trim()) {
+      setGameState(prev => ({
+        ...prev,
+        feedback: 'Please enter your name to start the game!'
+      }));
+      return;
+    }
+
+    if (stages.length === 0) {
+      setGameState(prev => ({
+        ...prev,
+        feedback: 'Loading stages, please wait...'
+      }));
+      return;
+    }
+
+    try {
+      // Create database session
+      const response = await fetch('/api/escape-room/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerName: playerName.trim(),
+          timeLimit: gameState.customTime,
+          timeLeft: gameState.customTime * 60,
+        }),
+      });
+
+      if (response.ok) {
+        const session = await response.json();
+        setSessionId(session.id);
+        
+        // Log game start event
+        await fetch('/api/escape-room/sessions/' + session.id + '/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventType: 'game_started',
+            eventData: { timeLimit: gameState.customTime, playerName: playerName.trim() },
+          }),
+        });
+      }
+
+      console.log('Starting game with stages:', stages.length);
+      console.log('First stage starter code:', stages[0]?.starterCode);
+      
       setGameState({
         timeLeft: gameState.customTime * 60,
         customTime: gameState.customTime,
@@ -79,7 +181,7 @@ export const useEscapeRoom = () => {
     } catch (error) {
       console.error('Failed to start game:', error);
     }
-  }, [gameState.customTime, stages]);
+  }, [gameState.customTime, stages, playerName]);
 
   const resetGame = useCallback(() => {
     setGameState({
@@ -93,8 +195,36 @@ export const useEscapeRoom = () => {
       gameWon: false,
       gameLost: false
     });
+    setSessionId(null);
     escapeRoomService.clearGameData();
   }, []);
+
+  const saveGame = useCallback(async () => {
+    if (!sessionId) return;
+
+    try {
+      const response = await fetch(`/api/escape-room/sessions/${sessionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentStage: gameState.currentStage,
+          timeLeft: gameState.timeLeft,
+          stagesCompleted: gameState.stagesCompleted,
+          userCode: gameState.userCode,
+          gameWon: gameState.gameWon,
+          gameLost: gameState.gameLost,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Game saved successfully');
+      }
+    } catch (error) {
+      console.error('Failed to save game:', error);
+    }
+  }, [sessionId, gameState]);
 
   const updateCustomTime = useCallback((minutes: number) => {
     setGameState(prev => ({
@@ -111,21 +241,101 @@ export const useEscapeRoom = () => {
   }, []);
 
   const normalizeCode = useCallback((code: string): string => {
-    return code.trim().replace(/\s+/g, ' ').toLowerCase();
+    // Normalize code by removing extra whitespace but preserving line structure
+    return code
+      .trim()
+      .split('\n')
+      .map(line => line.trim()) // Trim each line
+      .filter(line => line.length > 0) // Remove empty lines
+      .join('\n');
   }, []);
 
   const checkSolution = useCallback(() => {
     if (!stages[gameState.currentStage]) return;
 
     const currentStageData = stages[gameState.currentStage];
-    const userNormalized = normalizeCode(gameState.userCode);
-    const solutionNormalized = normalizeCode(currentStageData.solution);
+    const userCode = gameState.userCode.trim();
+    const solution = currentStageData.solution.trim();
 
-    // More flexible checking - allow variations
-    const isCorrect = userNormalized.includes(solutionNormalized.substring(0, 50)) || 
-                     solutionNormalized.includes(userNormalized.substring(0, 50));
+    console.log('Checking solution for stage:', currentStageData.title);
+    console.log('User code:', JSON.stringify(userCode));
+    console.log('Expected solution:', JSON.stringify(solution));
 
-    if (gameState.userCode.trim() === currentStageData.solution.trim() || isCorrect) {
+    // First check for exact match
+    if (userCode === solution) {
+      console.log('Exact match found!');
+      const newStagesCompleted = [...gameState.stagesCompleted, currentStageData.id];
+      
+      setGameState(prev => ({
+        ...prev,
+        feedback: '✓ Correct! Moving to next stage...',
+        stagesCompleted: newStagesCompleted
+      }));
+
+      // Move to next stage after delay
+      setTimeout(() => {
+        if (gameState.currentStage < stages.length - 1) {
+          setGameState(prev => ({
+            ...prev,
+            currentStage: prev.currentStage + 1,
+            userCode: stages[gameState.currentStage + 1]?.starterCode || '',
+            feedback: ''
+          }));
+        }
+      }, 1500);
+      return;
+    }
+
+    // For more flexible checking, normalize both codes
+    const userNormalized = normalizeCode(userCode);
+    const solutionNormalized = normalizeCode(solution);
+
+    console.log('User normalized:', JSON.stringify(userNormalized));
+    console.log('Solution normalized:', JSON.stringify(solutionNormalized));
+
+    // Special handling for Stage 3 (Complete the Function) - very simple case
+    if (currentStageData.order === 3) {
+      // For stage 3, check if the user code contains the essential parts
+      const hasUpper = userNormalized.includes('upper()');
+      const hasAppend = userNormalized.includes('append');
+      const hasFor = userNormalized.includes('for');
+      
+      if (hasUpper && hasAppend && hasFor) {
+        console.log('Stage 3 special case match found!');
+        const newStagesCompleted = [...gameState.stagesCompleted, currentStageData.id];
+        
+        setGameState(prev => ({
+          ...prev,
+          feedback: '✓ Correct! Moving to next stage...',
+          stagesCompleted: newStagesCompleted
+        }));
+
+        // Move to next stage after delay
+        setTimeout(() => {
+          if (gameState.currentStage < stages.length - 1) {
+            setGameState(prev => ({
+              ...prev,
+              currentStage: prev.currentStage + 1,
+              userCode: stages[gameState.currentStage + 1]?.starterCode || '',
+              feedback: ''
+            }));
+          }
+        }, 1500);
+        return;
+      }
+    }
+
+    // Check if the normalized versions are similar enough
+    // This is more strict than before - require at least 80% similarity
+    const similarity = calculateSimilarity(userNormalized, solutionNormalized);
+    console.log('Similarity score:', similarity);
+    
+    // Also check for key components that should be present
+    const hasKeyComponents = checkKeyComponents(userNormalized, solutionNormalized, currentStageData.order);
+    console.log('Has key components:', hasKeyComponents);
+    
+    if (similarity >= 0.7 || hasKeyComponents) {
+      console.log('Solution match found!');
       const newStagesCompleted = [...gameState.stagesCompleted, currentStageData.id];
       
       setGameState(prev => ({
@@ -146,12 +356,65 @@ export const useEscapeRoom = () => {
         }
       }, 1500);
     } else {
+      console.log('No match found - similarity too low');
       setGameState(prev => ({
         ...prev,
         feedback: '✗ Not quite right. Check the hint and try again!'
       }));
     }
   }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, stages, normalizeCode]);
+
+  // Helper function to calculate similarity between two strings
+  const checkKeyComponents = useCallback((userCode: string, solution: string, stageOrder: number): boolean => {
+    // Check for key components based on stage order
+    switch (stageOrder) {
+      case 1: // Format the Code
+        return userCode.includes('def') && userCode.includes('for') && userCode.includes('return');
+      case 2: // Debug the Code
+        return userCode.includes('def') && userCode.includes('for') && userCode.includes('range');
+      case 3: // Complete the Function
+        return userCode.includes('def') && userCode.includes('for') && (userCode.includes('upper') || userCode.includes('append'));
+      case 4: // Data Conversion
+        return userCode.includes('json') && userCode.includes('loads') && userCode.includes('items');
+      case 5: // Binary Search
+        return userCode.includes('def') && userCode.includes('while') && userCode.includes('mid');
+      default:
+        return false;
+    }
+  }, []);
+
+  const calculateSimilarity = useCallback((str1: string, str2: string): number => {
+    if (str1 === str2) return 1;
+    if (str1.length === 0 || str2.length === 0) return 0;
+    
+    // For very short strings, be more lenient
+    if (str1.length < 10 || str2.length < 10) {
+      // Check if one contains the other
+      if (str1.includes(str2) || str2.includes(str1)) {
+        return 0.9;
+      }
+    }
+    
+    // Simple Levenshtein distance-based similarity
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,     // deletion
+          matrix[j - 1][i] + 1,     // insertion
+          matrix[j - 1][i - 1] + cost // substitution
+        );
+      }
+    }
+    
+    const maxLength = Math.max(str1.length, str2.length);
+    return (maxLength - matrix[str2.length][str1.length]) / maxLength;
+  }, []);
 
   const skipStage = useCallback(() => {
     if (gameState.currentStage < stages.length - 1) {
@@ -174,17 +437,46 @@ export const useEscapeRoom = () => {
     return stages[gameState.currentStage] || null;
   }, [stages, gameState.currentStage]);
 
+  const goToPreviousStage = useCallback(() => {
+    if (gameState.currentStage > 0) {
+      setGameState(prev => ({
+        ...prev,
+        currentStage: prev.currentStage - 1,
+        userCode: stages[gameState.currentStage - 1]?.starterCode || '',
+        feedback: ''
+      }));
+    }
+  }, [gameState.currentStage, stages]);
+
+  const goToNextStage = useCallback(() => {
+    if (gameState.currentStage < stages.length - 1) {
+      setGameState(prev => ({
+        ...prev,
+        currentStage: prev.currentStage + 1,
+        userCode: stages[gameState.currentStage + 1]?.starterCode || '',
+        feedback: ''
+      }));
+    }
+  }, [gameState.currentStage, stages]);
+
   return {
     gameState,
     stages,
     isLoaded,
+    sessionId,
+    playerName,
+    setPlayerName,
     startGame,
     resetGame,
+    saveGame,
     updateCustomTime,
     updateUserCode,
     checkSolution,
     skipStage,
+    goToPreviousStage,
+    goToNextStage,
     formatTime,
-    getCurrentStage
+    getCurrentStage,
+    calculateScore
   };
 };

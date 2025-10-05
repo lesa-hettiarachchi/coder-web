@@ -1,10 +1,18 @@
 export interface EscapeRoomStage {
-  id: number;
+  id: string;
   title: string;
   description: string;
+  difficulty: string;
+  timeLimit: number;
+  testCases: string;
+  expectedOutput: string;
+  hints: string | null;
   starterCode: string;
   solution: string;
-  hint: string;
+  order: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface EscapeRoomGameState {
@@ -14,7 +22,7 @@ export interface EscapeRoomGameState {
   currentStage: number;
   userCode: string;
   feedback: string;
-  stagesCompleted: number[];
+  stagesCompleted: string[];
   gameWon: boolean;
   gameLost: boolean;
 }
@@ -23,7 +31,7 @@ export interface EscapeRoomGameData {
   id: string;
   startTime: Date;
   endTime?: Date;
-  completedStages: number[];
+  completedStages: string[];
   finalTime?: number;
   won: boolean;
   stages: EscapeRoomStage[];
