@@ -3,21 +3,56 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw } from 'lucide-react';
+import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw, Save, BarChart3 } from 'lucide-react';
 import { useEscapeRoom } from '@/hooks/useEscapeRoom';
 import { EscapeRoomBackground } from './EscapeRoomBackground';
+import { Leaderboard } from './Leaderboard';
 
 export const EscapeRoomGame: React.FC = () => {
+  const [showLeaderboard, setShowLeaderboard] = React.useState(false);
+
+  React.useEffect(() => {
+    console.log('showLeaderboard state changed:', showLeaderboard);
+  }, [showLeaderboard]);
+
+  // Handle leaderboard button clicks
+  const handleLeaderboardClick = () => {
+    console.log('Leaderboard button clicked');
+    setShowLeaderboard(true);
+  };
+
+  // Handle tab key in text inputs
+  const handleTabKey = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>, currentValue: string, setValue: (value: string) => void) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+      const start = target.selectionStart || 0;
+      const end = target.selectionEnd || 0;
+      const newValue = currentValue.substring(0, start) + '  ' + currentValue.substring(end);
+      setValue(newValue);
+      // Set cursor position after the inserted spaces
+      setTimeout(() => {
+        target.setSelectionRange(start + 2, start + 2);
+      }, 0);
+    }
+  };
+  
   const {
     gameState,
     stages,
     isLoaded,
+    sessionId,
+    playerName,
+    setPlayerName,
     startGame,
     resetGame,
+    saveGame,
     updateCustomTime,
     updateUserCode,
     checkSolution,
     skipStage,
+    goToPreviousStage,
+    goToNextStage,
     formatTime,
     getCurrentStage
   } = useEscapeRoom();
@@ -83,28 +118,55 @@ export const EscapeRoomGame: React.FC = () => {
               </CardContent>
             </Card>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[hsl(var(--foreground))]">
-                Set Timer (minutes):
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={gameState.customTime}
-                onChange={(e) => updateCustomTime(parseInt(e.target.value) || 30)}
-                className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[hsl(var(--foreground))]">
+                  Your Name:
+                </label>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  onKeyDown={(e) => handleTabKey(e, playerName, setPlayerName)}
+                  placeholder="Enter your name to start"
+                  className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[hsl(var(--foreground))]">
+                  Set Timer (minutes):
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={gameState.customTime}
+                  onChange={(e) => updateCustomTime(parseInt(e.target.value) || 30)}
+                  className="w-full px-3 py-2 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+                />
+              </div>
             </div>
 
-            <Button
-              onClick={startGame}
-              className="w-full"
-              size="lg"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Start Challenge
-            </Button>
+            <div className="space-y-3">
+              <Button
+                onClick={startGame}
+                className="w-full"
+                size="lg"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Start Challenge
+              </Button>
+              <Button
+                onClick={handleLeaderboardClick}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                View Leaderboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
         </div>
@@ -124,6 +186,14 @@ export const EscapeRoomGame: React.FC = () => {
             <CardDescription className="text-2xl">
               Time Remaining: {formatTime(gameState.timeLeft)}
             </CardDescription>
+            <div className="mt-4 p-4 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+              <p className="text-green-800 dark:text-green-200 font-semibold">
+                🎉 Congratulations {playerName}! You've been added to the leaderboard!
+              </p>
+              <p className="text-green-700 dark:text-green-300 text-sm mt-1">
+                Your score: {gameState.stagesCompleted.length * 100 + Math.max(0, gameState.timeLeft * 2) + 500} points
+              </p>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <Card className="bg-[hsl(var(--muted))]">
@@ -142,17 +212,39 @@ export const EscapeRoomGame: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Button
-              onClick={resetGame}
-              className="w-full"
-              size="lg"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Play Again
-            </Button>
+            <div className="space-y-3">
+              <Button
+                onClick={resetGame}
+                className="w-full"
+                size="lg"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Play Again
+              </Button>
+              <Button
+                onClick={handleLeaderboardClick}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                View Leaderboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
         </div>
+        
+        {/* Leaderboard Modal for victory screen */}
+        {showLeaderboard && (
+          <Leaderboard 
+            isOpen={showLeaderboard} 
+            onClose={() => {
+              console.log('Closing leaderboard from victory screen');
+              setShowLeaderboard(false);
+            }} 
+          />
+        )}
       </EscapeRoomBackground>
     );
   }
@@ -202,7 +294,9 @@ export const EscapeRoomGame: React.FC = () => {
                 <Lock className="w-8 h-8 text-[hsl(var(--destructive))] mr-3" />
                 <div>
                   <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Code Escape Room</h1>
-                  <p className="text-[hsl(var(--muted-foreground))]">Complete all stages to escape!</p>
+                  <p className="text-[hsl(var(--muted-foreground))]">
+                    {playerName ? `Welcome, ${playerName}! Complete all stages to escape!` : 'Complete all stages to escape!'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-6">
@@ -217,6 +311,28 @@ export const EscapeRoomGame: React.FC = () => {
                   <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
                     {gameState.stagesCompleted.length}/{stages.length}
                   </p>
+                </div>
+                <div className="flex gap-2">
+                  {sessionId && (
+                    <Button
+                      onClick={saveGame}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Game
+                    </Button>
+                  )}
+              <Button
+                onClick={handleLeaderboardClick}
+                variant="outline"
+                size="sm"
+                className="flex items-center"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Leaderboard
+              </Button>
                 </div>
               </div>
             </div>
@@ -298,6 +414,29 @@ export const EscapeRoomGame: React.FC = () => {
                   Skip
                 </Button>
               </div>
+
+              {/* Stage Navigation */}
+              <div className="flex justify-between items-center pt-4 border-t border-[hsl(var(--border))]">
+                <Button
+                  onClick={goToPreviousStage}
+                  variant="outline"
+                  size="sm"
+                  disabled={gameState.currentStage === 0}
+                >
+                  ← Previous Stage
+                </Button>
+                <span className="text-sm text-[hsl(var(--muted-foreground))]">
+                  Stage {gameState.currentStage + 1} of {stages.length}
+                </span>
+                <Button
+                  onClick={goToNextStage}
+                  variant="outline"
+                  size="sm"
+                  disabled={gameState.currentStage === stages.length - 1}
+                >
+                  Next Stage →
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -310,6 +449,7 @@ export const EscapeRoomGame: React.FC = () => {
               <textarea
                 value={gameState.userCode}
                 onChange={(e) => updateUserCode(e.target.value)}
+                onKeyDown={(e) => handleTabKey(e, gameState.userCode, updateUserCode)}
                 className="w-full h-96 bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] font-mono p-4 rounded-md border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] resize-none"
                 spellCheck="false"
                 placeholder="Write your code here..."
@@ -319,6 +459,17 @@ export const EscapeRoomGame: React.FC = () => {
         </div>
         </div>
       </div>
+      
+      {/* Leaderboard Modal */}
+      {showLeaderboard && (
+        <Leaderboard 
+          isOpen={showLeaderboard} 
+          onClose={() => {
+            console.log('Closing leaderboard');
+            setShowLeaderboard(false);
+          }} 
+        />
+      )}
     </EscapeRoomBackground>
   );
 };
