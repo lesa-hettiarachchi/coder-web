@@ -26,14 +26,18 @@ export const useEscapeRoom = () => {
 
   // Load stages on mount
   useEffect(() => {
-    try {
-      const loadedStages = escapeRoomService.getStages();
-      setStages(loadedStages);
-      setIsLoaded(true);
-    } catch (error) {
-      console.error('Failed to load escape room stages:', error);
-      setIsLoaded(true);
-    }
+    const loadStages = async () => {
+      try {
+        const loadedStages = await escapeRoomService.getStages();
+        setStages(loadedStages);
+        setIsLoaded(true);
+      } catch (error) {
+        console.error('Failed to load escape room stages:', error);
+        setIsLoaded(true);
+      }
+    };
+    
+    loadStages();
   }, []);
 
   // Timer effect & Game Lost Logic
@@ -120,22 +124,46 @@ export const useEscapeRoom = () => {
     }
   }, [gameState.stagesCompleted.length, stages.length, gameState.gameWon, gameState.currentPoints, gameState.timeLeft, gameState.customTime, gameState.playerName, saveToLeaderboard]);
 
-  const startGame = useCallback(() => {
-    setGameState({
-      timeLeft: gameState.customTime * 60,
-      customTime: gameState.customTime,
-      timerStarted: true,
-      currentStage: 0,
-      userCode: stages[0]?.starterCode || '',
-      feedback: '',
-      stagesCompleted: [],
-      gameWon: false,
-      gameLost: false,
-      currentPoints: 0,
-      hintsUsed: [],
-      showHint: false,
-      playerName: gameState.playerName
-    });
+  const startGame = useCallback(async () => {
+    try {
+      // Load fresh questions for each game
+      const freshStages = await escapeRoomService.getStages();
+      setStages(freshStages);
+      
+      setGameState({
+        timeLeft: gameState.customTime * 60,
+        customTime: gameState.customTime,
+        timerStarted: true,
+        currentStage: 0,
+        userCode: freshStages[0]?.starterCode || '',
+        feedback: '',
+        stagesCompleted: [],
+        gameWon: false,
+        gameLost: false,
+        currentPoints: 0,
+        hintsUsed: [],
+        showHint: false,
+        playerName: gameState.playerName
+      });
+    } catch (error) {
+      console.error('Error starting game:', error);
+      // Fallback to existing stages
+      setGameState({
+        timeLeft: gameState.customTime * 60,
+        customTime: gameState.customTime,
+        timerStarted: true,
+        currentStage: 0,
+        userCode: stages[0]?.starterCode || '',
+        feedback: '',
+        stagesCompleted: [],
+        gameWon: false,
+        gameLost: false,
+        currentPoints: 0,
+        hintsUsed: [],
+        showHint: false,
+        playerName: gameState.playerName
+      });
+    }
   }, [gameState.customTime, gameState.playerName, stages]);
 
   const resetGame = useCallback(() => {
@@ -189,47 +217,48 @@ export const useEscapeRoom = () => {
       .toLowerCase();
   }, []);
 
-  const checkSolution = useCallback(() => {
+  const checkSolution = useCallback(async () => {
     const currentStageData = stages[gameState.currentStage];
     if (!currentStageData || gameState.stagesCompleted.includes(currentStageData.id)) return;
 
-    // --- FIX APPLIED HERE ---
-    // Enhanced flexible checking logic with multiple matching strategies.
-    const userNormalized = normalizeCode(gameState.userCode);
-    const solutionNormalized = normalizeCode(currentStageData.solution);
-    
-    // Try multiple matching strategies
-    const isCorrect = 
-      userNormalized.includes(solutionNormalized) || 
-      solutionNormalized.includes(userNormalized) ||
-      // Check for key components in the solution
-      (currentStageData.id === 1 && userNormalized.includes('def calculate_sum') && userNormalized.includes('for num in numbers') && userNormalized.includes('sum += num')) ||
-      (currentStageData.id === 4 && userNormalized.includes('split') && userNormalized.includes('headers') && userNormalized.includes('result'));
+    try {
+      // Use API to check the answer
+      const result = await escapeRoomService.checkAnswer(
+        currentStageData.id,
+        gameState.userCode
+      );
 
-    if (isCorrect) {
-      const newStagesCompleted = [...new Set([...gameState.stagesCompleted, currentStageData.id])];
-      const hintPenalty = gameState.hintsUsed.includes(currentStageData.id) ? 20 : 0;
-      const stagePoints = currentStageData.points - hintPenalty;
-      
+      if (result.isCorrect) {
+        const newStagesCompleted = [...new Set([...gameState.stagesCompleted, currentStageData.id])];
+        const hintPenalty = gameState.hintsUsed.includes(currentStageData.id) ? 20 : 0;
+        const stagePoints = result.points - hintPenalty;
+        
+        setGameState(prev => ({
+          ...prev,
+          feedback: `✓ Correct! +${stagePoints} points (${result.points} base${hintPenalty > 0 ? ` - ${hintPenalty} hint penalty` : ''})`,
+          stagesCompleted: newStagesCompleted,
+          currentPoints: prev.currentPoints + stagePoints
+        }));
+
+        setTimeout(() => {
+          if (gameState.currentStage < stages.length - 1) {
+            goToNextStage();
+          }
+        }, 1500);
+      } else {
+        setGameState(prev => ({
+          ...prev,
+          feedback: '✗ Not quite right. Check the hint and try again!'
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking solution:', error);
       setGameState(prev => ({
         ...prev,
-        feedback: `✓ Correct! +${stagePoints} points (${currentStageData.points} base${hintPenalty > 0 ? ` - ${hintPenalty} hint penalty` : ''})`,
-        stagesCompleted: newStagesCompleted,
-        currentPoints: prev.currentPoints + stagePoints
-      }));
-
-      setTimeout(() => {
-        if (gameState.currentStage < stages.length - 1) {
-          goToNextStage();
-        }
-      }, 1500);
-    } else {
-      setGameState(prev => ({
-        ...prev,
-        feedback: '✗ Not quite right. Check the hint and try again!'
+        feedback: '✗ Error checking solution. Please try again!'
       }));
     }
-  }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, gameState.hintsUsed, stages, normalizeCode]);
+  }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, gameState.hintsUsed, stages]);
 
   const goToNextStage = useCallback(() => {
     if (gameState.currentStage < stages.length - 1) {

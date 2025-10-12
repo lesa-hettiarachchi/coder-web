@@ -7,6 +7,7 @@ import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw, Chevron
 import { useEscapeRoom } from '@/hooks/useEscapeRoom';
 import { EscapeRoomBackground } from './EscapeRoomBackground';
 import { Leaderboard } from './Leaderboard';
+import { DifficultyBadge } from './DifficultyBadge';
 
 export const EscapeRoomGame: React.FC = () => {
   const [showLeaderboard, setShowLeaderboard] = React.useState(false);
@@ -169,11 +170,17 @@ export const EscapeRoomGame: React.FC = () => {
                   <CardTitle>Stages Completed:</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     {stages.map((stage) => (
-                      <div key={stage.id} className="flex items-center text-green-600">
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        <span className="text-sm">{stage.title}</span>
+                      <div key={stage.id} className="flex items-center justify-between text-green-600">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-5 h-5 mr-2" />
+                          <span className="text-sm">{stage.title}</span>
+                        </div>
+                        <DifficultyBadge 
+                          difficulty={stage.difficulty as 'easy' | 'medium' | 'hard'} 
+                          size="sm"
+                        />
                       </div>
                     ))}
                   </div>
@@ -322,19 +329,26 @@ export const EscapeRoomGame: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex justify-between mb-2">
               {stages.map((stage, idx) => (
-                <div key={stage.id} className="flex items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500 text-white' :
-                    idx === gameState.currentStage ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' :
-                    'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]'
-                  }`}>
-                    {gameState.stagesCompleted.includes(stage.id) ? '✓' : idx + 1}
+                <div key={stage.id} className="flex flex-col items-center">
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                      gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500 text-white' :
+                      idx === gameState.currentStage ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' :
+                      'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]'
+                    }`}>
+                      {gameState.stagesCompleted.includes(stage.id) ? '✓' : idx + 1}
+                    </div>
+                    {idx < stages.length - 1 && (
+                      <div className={`w-12 h-1 ${
+                        gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500' : 'bg-[hsl(var(--muted))]'
+                      }`} />
+                    )}
                   </div>
-                  {idx < stages.length - 1 && (
-                    <div className={`w-12 h-1 ${
-                      gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500' : 'bg-[hsl(var(--muted))]'
-                    }`} />
-                  )}
+                  <DifficultyBadge 
+                    difficulty={stage.difficulty as 'easy' | 'medium' | 'hard'} 
+                    size="sm" 
+                    className="mt-1"
+                  />
                 </div>
               ))}
             </div>
@@ -347,8 +361,11 @@ export const EscapeRoomGame: React.FC = () => {
           <Card className="border-2 border-[hsl(var(--primary))]">
             <CardHeader>
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-2xl">{currentStage.title}</CardTitle>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CardTitle className="text-2xl">{currentStage.title}</CardTitle>
+                    <DifficultyBadge difficulty={currentStage.difficulty as 'easy' | 'medium' | 'hard'} />
+                  </div>
                   <CardDescription className="text-base">
                     {currentStage.description}
                   </CardDescription>
