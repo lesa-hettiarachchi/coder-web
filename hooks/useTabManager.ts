@@ -9,9 +9,9 @@ export const useTabsManager = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
-        const storedTabs = tabsService.getAllTabs();
+        const storedTabs = await tabsService.getAllTabs();
         const storedActiveId = tabsService.getActiveTabId();
         
         setTabs(storedTabs);
@@ -53,9 +53,9 @@ export const useTabsManager = () => {
     }
   }, [activeTabId, isLoaded]);
 
-  const addTab = useCallback((newTabData: Omit<Tab, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addTab = useCallback(async (newTabData: Omit<Tab, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newTab = tabsService.addTab(newTabData);
+      const newTab = await tabsService.addTab(newTabData);
       setTabs(prev => [...prev, newTab]);
       setActiveTabId(newTab.id);
       return newTab;
@@ -65,9 +65,9 @@ export const useTabsManager = () => {
     }
   }, []);
 
-  const updateTab = useCallback((id: number, updates: Partial<Omit<Tab, 'id' | 'createdAt'>>) => {
+  const updateTab = useCallback(async (id: number, updates: Partial<Omit<Tab, 'id' | 'createdAt'>>) => {
     try {
-      const updatedTab = tabsService.updateTab(id, updates);
+      const updatedTab = await tabsService.updateTab(id, updates);
       if (updatedTab) {
         setTabs(prev => prev.map(tab => 
           tab.id === id ? updatedTab : tab
@@ -81,9 +81,9 @@ export const useTabsManager = () => {
     }
   }, []);
 
-  const deleteTab = useCallback((id: number) => {
+  const deleteTab = useCallback(async (id: number) => {
     try {
-      const success = tabsService.deleteTab(id);
+      const success = await tabsService.deleteTab(id);
       if (success) {
         setTabs(prev => prev.filter(tab => tab.id !== id));
         
@@ -103,9 +103,9 @@ export const useTabsManager = () => {
     return tabs.find(tab => tab.id === activeTabId) || null;
   }, [tabs, activeTabId]);
 
-  const clearAllTabs = useCallback(() => {
+  const clearAllTabs = useCallback(async () => {
     try {
-      tabsService.clearAllData();
+      await tabsService.clearAllData();
       setTabs([]);
       setActiveTabId(null);
     } catch (error) {
@@ -114,21 +114,20 @@ export const useTabsManager = () => {
     }
   }, []);
 
-  const exportTabs = useCallback(() => {
+  const exportTabs = useCallback(async () => {
     try {
-      return tabsService.exportData();
+      return await tabsService.exportData();
     } catch (error) {
       console.error('Failed to export tabs:', error);
       throw error;
     }
   }, []);
 
-  const importTabs = useCallback((jsonData: string) => {
+  const importTabs = useCallback(async (jsonData: string) => {
     try {
-      const success = tabsService.importData(jsonData);
+      const success = await tabsService.importData(jsonData);
       if (success) {
-        
-        const storedTabs = tabsService.getAllTabs();
+        const storedTabs = await tabsService.getAllTabs();
         const storedActiveId = tabsService.getActiveTabId();
         
         setTabs(storedTabs);

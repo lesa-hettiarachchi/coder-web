@@ -93,3 +93,14 @@ model GameEvent {
 
   @@map("game_events")
 }
+
+model Tab {
+  id           Int      @id @default(autoincrement())
+  title        String
+  instructions String
+  code         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("tabs")
+}
