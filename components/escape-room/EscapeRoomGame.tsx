@@ -16,11 +16,13 @@ export const EscapeRoomGame: React.FC = () => {
     gameState,
     stages,
     isLoaded,
+    maxPossibleScore,
     startGame,
     resetGame,
     updateCustomTime,
     updatePlayerName,
     updateUserCode,
+    updateCurrentStage,
     checkSolution,
     goToNextStage,
     goToPreviousStage,
@@ -82,7 +84,61 @@ export const EscapeRoomGame: React.FC = () => {
                       <span className="text-[hsl(var(--primary))] mr-2">•</span>
                       Complete 4 coding challenges to escape
                     </li>
+                    <li className="flex items-start">
+                      <span className="text-[hsl(var(--primary))] mr-2">•</span>
+                      You'll get 2 Easy, 1 Medium, and 1 Hard question
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-[hsl(var(--primary))] mr-2">•</span>
+                      Click any question number to start (1, 2, 3, or 4)
+                    </li>
                   </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[hsl(var(--muted))]">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Star className="w-5 h-5 mr-2 text-yellow-500" />
+                    Scoring System
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-[hsl(var(--muted-foreground))]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-semibold text-[hsl(var(--foreground))] mb-2">Points Distribution</h4>
+                        <ul className="space-y-1 text-sm">
+                          <li className="flex items-center">
+                            <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                            Easy: 100-125 points each
+                          </li>
+                          <li className="flex items-center">
+                            <span className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                            Medium: 150-175 points each
+                          </li>
+                          <li className="flex items-center">
+                            <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                            Hard: 200-250 points each
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-[hsl(var(--foreground))] mb-2">Leaderboard Score</h4>
+                        <ul className="space-y-1 text-sm">
+                          <li>• 70% based on accuracy</li>
+                          <li>• 30% based on speed</li>
+                          <li>• -100 penalty for timeout</li>
+                          <li>• Max score: 1000 points</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-[hsl(var(--border))]">
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                        <strong>Pro tip:</strong> Complete questions quickly and accurately for the best leaderboard ranking!
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -271,6 +327,137 @@ export const EscapeRoomGame: React.FC = () => {
   // Main game interface
   const currentStage = getCurrentStage();
   const stagePoints = getCurrentStagePoints();
+  
+  // Show question selection if no specific question is selected
+  if (gameState.currentStage === -1) {
+    return (
+      <>
+        <EscapeRoomBackground gameState="playing">
+          <div className="p-4">
+            <div className="max-w-6xl mx-auto space-y-4">
+              {/* Header */}
+              <Card className="border-2 border-[hsl(var(--destructive))]">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center flex-wrap gap-4">
+                    <div className="flex items-center">
+                      <Lock className="w-8 h-8 text-[hsl(var(--destructive))] mr-3" />
+                      <div>
+                        <h1 className="text-2xl font-bold text-red-700 text-[hsl(var(--foreground))]">Escape Room</h1>
+                        <p className="text-[hsl(var(--muted-foreground))]">Hey {gameState.playerName}, Choose a question to start solving!</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4 md:space-x-6">
+                      <div className="text-center">
+                        <Clock className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
+                        <p className={`text-2xl font-bold ${gameState.timeLeft < 300 ? 'text-red-500' : 'text-[hsl(var(--foreground))]'}`}>
+                          {formatTime(gameState.timeLeft)}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[hsl(var(--muted-foreground))] text-sm">Progress</p>
+                        <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
+                          {gameState.stagesCompleted.length}/{stages.length}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <Star className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
+                        <p className="text-2xl font-bold text-yellow-500">
+                          {gameState.currentPoints}
+                        </p>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                          / {maxPossibleScore} max
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => setShowLeaderboard(true)}
+                        variant="outline"
+                        size="sm"
+                        className="hidden md:flex"
+                      >
+                        <Trophy className="w-4 h-4 mr-2" />
+                        Leaderboard
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Question Selection Grid */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-[hsl(var(--foreground))] mb-2">Choose Your Challenge</h2>
+                    <p className="text-[hsl(var(--muted-foreground))] mb-2">Click on any question number to start solving</p>
+                    <div className="flex justify-center gap-4 text-sm">
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                        <span>2 Easy</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                        <span>1 Medium</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                        <span>1 Hard</span>
+                      </span>
+                      <span className="text-[hsl(var(--muted-foreground))]">
+                        Max Score: {maxPossibleScore}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {stages.map((stage, idx) => (
+                      <button
+                        key={stage.id}
+                        onClick={() => {
+                          updateCurrentStage(idx, stage);
+                        }}
+                        className={`relative group p-6 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                          gameState.stagesCompleted.includes(stage.id) 
+                            ? 'bg-green-50 border-green-300 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700' 
+                            : 'bg-[hsl(var(--muted))] border-[hsl(var(--border))] hover:bg-[hsl(var(--accent))]'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className={`text-6xl font-bold mb-2 ${
+                            gameState.stagesCompleted.includes(stage.id) 
+                              ? 'text-green-600' 
+                              : 'text-[hsl(var(--foreground))]'
+                          }`}>
+                            {gameState.stagesCompleted.includes(stage.id) ? '✓' : idx + 1}
+                          </div>
+                          <div className="text-sm font-medium mb-2">
+                            {stage.title.split(':')[1]?.trim() || `Question ${idx + 1}`}
+                          </div>
+                          <DifficultyBadge 
+                            difficulty={stage.difficulty as 'easy' | 'medium' | 'hard'} 
+                            size="sm"
+                          />
+                          {gameState.stagesCompleted.includes(stage.id) && (
+                            <div className="mt-2 text-xs text-green-600 font-semibold">
+                              Completed!
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </EscapeRoomBackground>
+        
+        <Leaderboard 
+          isOpen={showLeaderboard} 
+          onClose={() => setShowLeaderboard(false)}
+          currentPlayerName={gameState.playerName}
+        />
+      </>
+    );
+  }
+  
   if (!currentStage) return null;
 
   return (
@@ -286,7 +473,12 @@ export const EscapeRoomGame: React.FC = () => {
                 <Lock className="w-8 h-8 text-[hsl(var(--destructive))] mr-3" />
                 <div>
                   <h1 className="text-2xl font-bold text-red-700 text-[hsl(var(--foreground))]">Escape Room</h1>
-                  <p className="text-[hsl(var(--muted-foreground))]">Hey {gameState.playerName}, Complete all stages to escape!</p>
+                  <p className="text-[hsl(var(--muted-foreground))]">
+                    Hey {gameState.playerName}, Complete all stages to escape! 
+                    <span className="ml-2 text-[hsl(var(--primary))] font-semibold">
+                      Currently: Question {gameState.currentStage + 1}
+                    </span>
+                  </p>
                 </div>
               </div>
               {/* --- UI CHANGE APPLIED HERE --- */}
@@ -303,12 +495,28 @@ export const EscapeRoomGame: React.FC = () => {
                     {gameState.stagesCompleted.length}/{stages.length}
                   </p>
                 </div>
-                <div className="text-center">
-                  <Star className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
-                  <p className="text-2xl font-bold text-yellow-500">
-                    {gameState.currentPoints}
-                  </p>
-                </div>
+                      <div className="text-center">
+                        <Star className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
+                        <p className="text-2xl font-bold text-yellow-500">
+                          {gameState.currentPoints}
+                        </p>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                          / {maxPossibleScore} max
+                        </p>
+                      </div>
+                {/* Back to Questions Button */}
+                <Button
+                  onClick={() => {
+                    updateCurrentStage(-1); // -1 means show question selection
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Back to Questions
+                </Button>
+                
                 {/* --- ADDED: Leaderboard Button --- */}
                 <Button
                   onClick={() => setShowLeaderboard(true)}
@@ -324,36 +532,6 @@ export const EscapeRoomGame: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Progress Bar */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between mb-2">
-              {stages.map((stage, idx) => (
-                <div key={stage.id} className="flex flex-col items-center">
-                  <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                      gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500 text-white' :
-                      idx === gameState.currentStage ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' :
-                      'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]'
-                    }`}>
-                      {gameState.stagesCompleted.includes(stage.id) ? '✓' : idx + 1}
-                    </div>
-                    {idx < stages.length - 1 && (
-                      <div className={`w-12 h-1 ${
-                        gameState.stagesCompleted.includes(stage.id) ? 'bg-green-500' : 'bg-[hsl(var(--muted))]'
-                      }`} />
-                    )}
-                  </div>
-                  <DifficultyBadge 
-                    difficulty={stage.difficulty as 'easy' | 'medium' | 'hard'} 
-                    size="sm" 
-                    className="mt-1"
-                  />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Main Challenge Area */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -411,15 +589,6 @@ export const EscapeRoomGame: React.FC = () => {
 
               <div className="flex gap-2">
                 <Button
-                  onClick={goToPreviousStage}
-                  variant="outline"
-                  disabled={gameState.currentStage === 0}
-                  className="flex items-center"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  Previous
-                </Button>
-                <Button
                   onClick={useHint}
                   variant="outline"
                   disabled={gameState.hintsUsed.includes(currentStage.id)}
@@ -433,15 +602,6 @@ export const EscapeRoomGame: React.FC = () => {
                   className="flex-1"
                 >
                   Submit Solution
-                </Button>
-                <Button
-                  onClick={goToNextStage}
-                  variant="outline"
-                  disabled={gameState.currentStage === stages.length - 1}
-                  className="flex items-center"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
             </CardContent>

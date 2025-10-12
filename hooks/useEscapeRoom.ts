@@ -6,8 +6,8 @@ import { escapeRoomService } from '@/service/escapeRoomService';
 
 export const useEscapeRoom = () => {
   const [gameState, setGameState] = useState<EscapeRoomGameState>({
-    timeLeft: 600, // 10 minutes default
-    customTime: 10,
+    timeLeft: 1800, // 30 minutes default
+    customTime: 30,
     timerStarted: false,
     currentStage: 0,
     userCode: '',
@@ -23,6 +23,7 @@ export const useEscapeRoom = () => {
 
   const [stages, setStages] = useState<EscapeRoomStage[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [maxPossibleScore, setMaxPossibleScore] = useState(0);
 
   // Load stages on mount
   useEffect(() => {
@@ -30,6 +31,11 @@ export const useEscapeRoom = () => {
       try {
         const loadedStages = await escapeRoomService.getStages();
         setStages(loadedStages);
+        
+        // Calculate maximum possible score for balanced distribution (2 easy, 1 medium, 1 hard)
+        const maxScore = loadedStages.reduce((total, stage) => total + stage.points, 0);
+        setMaxPossibleScore(maxScore);
+        
         setIsLoaded(true);
       } catch (error) {
         console.error('Failed to load escape room stages:', error);
@@ -65,12 +71,51 @@ export const useEscapeRoom = () => {
     }
   }, [gameState.timeLeft, gameState.timerStarted, gameState.gameWon, gameState.gameLost]);
 
+  const getGameMode = useCallback((timeCompleted: number): string => {
+    const timeInMinutes = timeCompleted / 60;
+    
+    if (timeInMinutes <= 5) {
+      return 'legend';
+    } else if (timeInMinutes <= 20) {
+      return 'pro';
+    } else if (timeInMinutes <= 60) {
+      return 'normal';
+    } else {
+      return 'noob';
+    }
+  }, []);
+
+  const calculateLeaderboardScore = useCallback((points: number, maxPoints: number, timeCompleted: number, timeLimit: number): number => {
+    // Points ratio (0 to 1)
+    const pointsRatio = maxPoints > 0 ? points / maxPoints : 0;
+    
+    // Time bonus (0 to 1) - faster completion = higher bonus
+    const timeRatio = timeLimit > 0 ? Math.max(0, (timeLimit - timeCompleted) / timeLimit) : 0;
+    
+    // Timeout penalty: -100 points if time exceeded
+    const timeoutPenalty = timeCompleted > timeLimit ? 100 : 0;
+    
+    // Combined score: 70% points ratio + 30% time bonus - timeout penalty
+    // Scale to 0-1000 for better leaderboard display
+    const combinedScore = (pointsRatio * 0.7 + timeRatio * 0.3) * 1000 - timeoutPenalty;
+    
+    return Math.round(Math.max(0, combinedScore)); // Ensure score doesn't go below 0
+  }, []);
+
   const saveToLeaderboard = useCallback(async (finalScore: number, timeCompleted: number) => {
+    const gameMode = getGameMode(timeCompleted);
+    const timeLimit = gameState.customTime * 60; // Convert minutes to seconds
+    const leaderboardScore = calculateLeaderboardScore(finalScore, maxPossibleScore, timeCompleted, timeLimit);
+    
     console.log('🚀 Attempting to save to leaderboard:', {
       playerName: gameState.playerName,
       finalScore,
+      maxPossibleScore,
       timeCompleted,
-      stagesCompleted: gameState.stagesCompleted.length
+      timeLimit,
+      leaderboardScore,
+      stagesCompleted: gameState.stagesCompleted.length,
+      gameMode
     });
     
     try {
@@ -83,9 +128,12 @@ export const useEscapeRoom = () => {
         body: JSON.stringify({
           playerName: gameState.playerName,
           finalScore,
+          leaderboardScore,
           timeCompleted,
+          timeLimit,
+          maxPossibleScore,
           stagesCompleted: gameState.stagesCompleted.length,
-          gameMode: 'normal'
+          gameMode
         }),
       });
       
@@ -99,7 +147,7 @@ export const useEscapeRoom = () => {
     } catch (error) {
       console.error('💥 Error saving to leaderboard:', error);
     }
-  }, [gameState.playerName, gameState.stagesCompleted.length]);
+  }, [gameState.playerName, gameState.stagesCompleted.length, gameState.customTime, maxPossibleScore, getGameMode, calculateLeaderboardScore]);
 
   // Game completion and save logic (Game Won)
   useEffect(() => {
@@ -134,8 +182,8 @@ export const useEscapeRoom = () => {
         timeLeft: gameState.customTime * 60,
         customTime: gameState.customTime,
         timerStarted: true,
-        currentStage: 0,
-        userCode: freshStages[0]?.starterCode || '',
+        currentStage: -1, // Start with question selection
+        userCode: '',
         feedback: '',
         stagesCompleted: [],
         gameWon: false,
@@ -152,8 +200,8 @@ export const useEscapeRoom = () => {
         timeLeft: gameState.customTime * 60,
         customTime: gameState.customTime,
         timerStarted: true,
-        currentStage: 0,
-        userCode: stages[0]?.starterCode || '',
+        currentStage: -1, // Start with question selection
+        userCode: '',
         feedback: '',
         stagesCompleted: [],
         gameWon: false,
@@ -168,7 +216,7 @@ export const useEscapeRoom = () => {
 
   const resetGame = useCallback(() => {
     setGameState({
-      timeLeft: 1800,
+      timeLeft: 1800, // 30 minutes
       customTime: 30,
       timerStarted: false,
       currentStage: 0,
@@ -203,6 +251,16 @@ export const useEscapeRoom = () => {
     setGameState(prev => ({
       ...prev,
       playerName: name
+    }));
+  }, []);
+
+  const updateCurrentStage = useCallback((stageIndex: number, stageData?: EscapeRoomStage) => {
+    setGameState(prev => ({
+      ...prev,
+      currentStage: stageIndex,
+      userCode: stageData?.starterCode || '',
+      feedback: '',
+      showHint: false
     }));
   }, []);
 
@@ -325,17 +383,21 @@ export const useEscapeRoom = () => {
     gameState,
     stages,
     isLoaded,
+    maxPossibleScore,
     startGame,
     resetGame,
     updateCustomTime,
     updatePlayerName,
     updateUserCode,
+    updateCurrentStage,
     checkSolution,
     goToNextStage,
     goToPreviousStage,
     useHint,
     formatTime,
     getCurrentStage,
-    getCurrentStagePoints
+    getCurrentStagePoints,
+    getGameMode,
+    calculateLeaderboardScore
   };
 };

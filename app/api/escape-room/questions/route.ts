@@ -5,32 +5,45 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const count = parseInt(searchParams.get('count') || '4');
-    const difficulty = searchParams.get('difficulty'); // 'easy', 'medium', 'hard', or null for random
+    const difficulty = searchParams.get('difficulty'); // 'easy', 'medium', 'hard', or null for balanced
     
     // Get all active stages from database
     const allStages = await escapeRoomDatabaseService.getEscapeRoomStages();
     
-    let filteredStages = allStages;
+    let selectedStages = [];
     
-    // Filter by difficulty if specified
+    // If specific difficulty requested, return that difficulty
     if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
-      filteredStages = allStages.filter(stage => stage.difficulty === difficulty);
-    }
-    
-    // Shuffle and select random stages
-    const shuffled = [...filteredStages].sort(() => Math.random() - 0.5);
-    const selectedStages = shuffled.slice(0, Math.min(count, filteredStages.length));
-    
-    // If we don't have enough stages, fill with random stages from all difficulties
-    if (selectedStages.length < count) {
-      const remaining = count - selectedStages.length;
-      const usedIds = new Set(selectedStages.map(s => s.id));
-      const additionalStages = allStages
-        .filter(stage => !usedIds.has(stage.id))
-        .sort(() => Math.random() - 0.5)
-        .slice(0, remaining);
+      const filteredStages = allStages.filter(stage => stage.difficulty === difficulty);
+      const shuffled = [...filteredStages].sort(() => Math.random() - 0.5);
+      selectedStages = shuffled.slice(0, Math.min(count, filteredStages.length));
+    } else {
+      // Balanced selection: 2 easy, 1 medium, 1 hard
+      const easyStages = allStages.filter(stage => stage.difficulty === 'easy');
+      const mediumStages = allStages.filter(stage => stage.difficulty === 'medium');
+      const hardStages = allStages.filter(stage => stage.difficulty === 'hard');
       
-      selectedStages.push(...additionalStages);
+      // Shuffle each difficulty group
+      const shuffledEasy = [...easyStages].sort(() => Math.random() - 0.5);
+      const shuffledMedium = [...mediumStages].sort(() => Math.random() - 0.5);
+      const shuffledHard = [...hardStages].sort(() => Math.random() - 0.5);
+      
+      // Select 2 easy, 1 medium, 1 hard
+      selectedStages = [
+        ...shuffledEasy.slice(0, 2),
+        ...shuffledMedium.slice(0, 1),
+        ...shuffledHard.slice(0, 1)
+      ];
+      
+      // If we don't have enough of any difficulty, fill with available stages
+      if (selectedStages.length < 4) {
+        const usedIds = new Set(selectedStages.map(s => s.id));
+        const remainingStages = allStages
+          .filter(stage => !usedIds.has(stage.id))
+          .sort(() => Math.random() - 0.5);
+        
+        selectedStages.push(...remainingStages.slice(0, 4 - selectedStages.length));
+      }
     }
     
     // Sort by difficulty for better game flow (easy -> medium -> hard)
@@ -40,10 +53,19 @@ export async function GET(request: NextRequest) {
              difficultyOrder[b.difficulty as keyof typeof difficultyOrder];
     });
     
+    // Calculate maximum possible score
+    const maxScore = selectedStages.reduce((total, stage) => total + stage.points, 0);
+    
     return NextResponse.json({
       stages: selectedStages,
       total: selectedStages.length,
-      difficulty: difficulty || 'mixed'
+      difficulty: difficulty || 'balanced',
+      maxPossibleScore: maxScore,
+      distribution: {
+        easy: selectedStages.filter(s => s.difficulty === 'easy').length,
+        medium: selectedStages.filter(s => s.difficulty === 'medium').length,
+        hard: selectedStages.filter(s => s.difficulty === 'hard').length
+      }
     });
     
   } catch (error) {

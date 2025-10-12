@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// POST /api/tabs/bulk - Bulk operations (clear all, export, import)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

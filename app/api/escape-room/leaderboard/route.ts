@@ -21,7 +21,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { playerName, finalScore, timeCompleted, stagesCompleted, gameMode } = body;
+    const { 
+      playerName, 
+      finalScore, 
+      leaderboardScore, 
+      timeCompleted, 
+      timeLimit, 
+      maxPossibleScore, 
+      stagesCompleted, 
+      gameMode 
+    } = body;
     
     if (!playerName || finalScore === undefined || timeCompleted === undefined || stagesCompleted === undefined) {
       return NextResponse.json(
@@ -33,7 +42,10 @@ export async function POST(request: NextRequest) {
     const entry = await escapeRoomDatabaseService.addToLeaderboard({
       playerName,
       finalScore,
+      leaderboardScore: leaderboardScore || 0,
       timeCompleted,
+      timeLimit: timeLimit || 1800,
+      maxPossibleScore: maxPossibleScore || 675,
       stagesCompleted,
       gameMode: gameMode || 'normal'
     });

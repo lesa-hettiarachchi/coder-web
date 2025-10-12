@@ -9,7 +9,10 @@ interface LeaderboardEntry {
   id: string;
   playerName: string;
   finalScore: number;
+  leaderboardScore: number;
   timeCompleted: number;
+  timeLimit: number;
+  maxPossibleScore: number;
   stagesCompleted: number;
   gameMode: string;
   createdAt: string;
@@ -83,6 +86,36 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ isOpen, onClose, curre
         return <span className="w-6 h-6 flex items-center justify-center text-lg font-bold text-gray-500">
           {index + 1}
         </span>;
+    }
+  };
+
+  const getGameModeStyle = (gameMode: string) => {
+    switch (gameMode) {
+      case 'legend':
+        return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 dark:from-purple-900/30 dark:to-pink-900/30 dark:text-purple-300 border-purple-300 dark:border-purple-600';
+      case 'pro':
+        return 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900/30 dark:to-cyan-900/30 dark:text-blue-300 border-blue-300 dark:border-blue-600';
+      case 'normal':
+        return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900/30 dark:to-emerald-900/30 dark:text-green-300 border-green-300 dark:border-green-600';
+      case 'noob':
+        return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 dark:from-gray-900/30 dark:to-slate-900/30 dark:text-gray-300 border-gray-300 dark:border-gray-600';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600';
+    }
+  };
+
+  const getGameModeIcon = (gameMode: string) => {
+    switch (gameMode) {
+      case 'legend':
+        return '👑';
+      case 'pro':
+        return '⭐';
+      case 'normal':
+        return '✅';
+      case 'noob':
+        return '🐣';
+      default:
+        return '📊';
     }
   };
 
@@ -176,10 +209,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ isOpen, onClose, curre
                             <Clock className="w-4 h-4 mr-1" />
                             {formatTime(entry.timeCompleted)}
                           </span>
+                          <span className="text-xs text-gray-500">
+                            {Math.round((entry.timeCompleted / entry.timeLimit) * 100)}% of time used
+                          </span>
                         </div>
                         <div className="flex items-center space-x-4">
-                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
-                            {entry.gameMode}
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getGameModeStyle(entry.gameMode)}`}>
+                            <span className="mr-1">{getGameModeIcon(entry.gameMode)}</span>
+                            {entry.gameMode.toUpperCase()}
                           </span>
                           <span className="text-xs">
                             {formatDateTime(entry.createdAt)}
@@ -190,9 +227,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ isOpen, onClose, curre
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-green-600">
-                      {entry.finalScore}
+                      {entry.leaderboardScore}
                     </div>
-                    <div className="text-sm text-gray-500">points</div>
+                    <div className="text-sm text-gray-500">
+                      {entry.finalScore}/{entry.maxPossibleScore} pts
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {Math.round((entry.finalScore / entry.maxPossibleScore) * 100)}% accuracy
+                    </div>
                   </div>
                 </div>
                 );

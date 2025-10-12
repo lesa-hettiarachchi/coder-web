@@ -148,7 +148,10 @@ export const escapeRoomDatabaseService = {
   async addToLeaderboard(data: {
     playerName: string;
     finalScore: number;
+    leaderboardScore: number;
     timeCompleted: number;
+    timeLimit: number;
+    maxPossibleScore: number;
     stagesCompleted: number;
     gameMode?: string;
   }) {
@@ -157,7 +160,10 @@ export const escapeRoomDatabaseService = {
         data: {
           playerName: data.playerName,
           finalScore: data.finalScore,
+          leaderboardScore: data.leaderboardScore,
           timeCompleted: data.timeCompleted,
+          timeLimit: data.timeLimit,
+          maxPossibleScore: data.maxPossibleScore,
           stagesCompleted: data.stagesCompleted,
           gameMode: data.gameMode || 'normal',
         },
@@ -173,7 +179,7 @@ export const escapeRoomDatabaseService = {
     try {
       const leaderboard = await prisma.leaderboard.findMany({
         orderBy: [
-          { finalScore: 'desc' },
+          { leaderboardScore: 'desc' },
           { timeCompleted: 'asc' },
         ],
         take: limit,
