@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw, ChevronLeft, ChevronRight, Lightbulb, Star } from 'lucide-react';
+import { Lock, CheckCircle, Clock, AlertCircle, Trophy, Play, RotateCcw, ChevronLeft, Lightbulb, Star } from 'lucide-react';
 import { useEscapeRoom } from '@/hooks/useEscapeRoom';
 import { EscapeRoomBackground } from './EscapeRoomBackground';
 import { Leaderboard } from './Leaderboard';
@@ -24,8 +24,6 @@ export const EscapeRoomGame: React.FC = () => {
     updateUserCode,
     updateCurrentStage,
     checkSolution,
-    goToNextStage,
-    goToPreviousStage,
     useHint,
     formatTime,
     getCurrentStage,
@@ -86,7 +84,7 @@ export const EscapeRoomGame: React.FC = () => {
                     </li>
                     <li className="flex items-start">
                       <span className="text-[hsl(var(--primary))] mr-2">•</span>
-                      You'll get 2 Easy, 1 Medium, and 1 Hard question
+                      You&apos;ll get 2 Easy, 1 Medium, and 1 Hard question
                     </li>
                     <li className="flex items-start">
                       <span className="text-[hsl(var(--primary))] mr-2">•</span>

@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function for flexible matching of hard questions
-function checkFlexibleMatching(stageId: number, userNormalized: string, solutionNormalized: string): boolean {
+function checkFlexibleMatching(stageId: number, userNormalized: string, _solutionNormalized: string): boolean {
   switch (stageId) {
     case 15: // Data Conversion - CSV to JSON
       return (userNormalized.includes('split') && 
@@ -136,7 +136,7 @@ function checkFlexibleMatching(stageId: number, userNormalized: string, solution
 }
 
 // Helper function to check key components for specific stages
-function checkKeyComponents(stageId: number, userNormalized: string, solutionNormalized: string): boolean {
+function checkKeyComponents(stageId: number, userNormalized: string, _solutionNormalized: string): boolean {
   // Stage-specific key component checks
   switch (stageId) {
     case 1: // Format the Code

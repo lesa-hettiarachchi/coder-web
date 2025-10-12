@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
         // Import new tabs
         const importedTabs = await prisma.tab.createMany({
-          data: data.tabs.map((tab: any) => ({
+          data: data.tabs.map((tab: { title: string; instructions: string; code: string }) => ({
             title: tab.title,
             instructions: tab.instructions,
             code: tab.code
