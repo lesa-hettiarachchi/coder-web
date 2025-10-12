@@ -36,10 +36,8 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Clear existing tabs before import
         await prisma.tab.deleteMany();
 
-        // Import new tabs
         const importedTabs = await prisma.tab.createMany({
           data: data.tabs.map((tab: { title: string; instructions: string; code: string }) => ({
             title: tab.title,

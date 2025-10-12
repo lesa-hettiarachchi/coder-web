@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { TabFormData } from '@/types/tabs';
 
-// GET /api/tabs/[id] - Get a specific tab
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -42,7 +41,6 @@ export async function GET(
   }
 }
 
-// PUT /api/tabs/[id] - Update a specific tab
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -60,7 +58,6 @@ export async function PUT(
 
     const body: Partial<TabFormData> = await request.json();
     
-    // Validate that at least one field is provided
     if (!body.title && !body.instructions && !body.code) {
       return NextResponse.json(
         { success: false, error: 'At least one field must be provided for update' },
@@ -68,7 +65,6 @@ export async function PUT(
       );
     }
 
-    // Check if tab exists
     const existingTab = await prisma.tab.findUnique({
       where: { id }
     });
@@ -102,7 +98,6 @@ export async function PUT(
   }
 }
 
-// DELETE /api/tabs/[id] - Delete a specific tab
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -118,7 +113,6 @@ export async function DELETE(
       );
     }
 
-    // Check if tab exists
     const existingTab = await prisma.tab.findUnique({
       where: { id }
     });

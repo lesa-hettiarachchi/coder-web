@@ -6,7 +6,7 @@ import { escapeRoomService } from '@/service/escapeRoomService';
 
 export const useEscapeRoom = () => {
   const [gameState, setGameState] = useState<EscapeRoomGameState>({
-    timeLeft: 1800, // 30 minutes default
+    timeLeft: 1800, 
     customTime: 30,
     timerStarted: false,
     currentStage: 0,
@@ -25,14 +25,12 @@ export const useEscapeRoom = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [maxPossibleScore, setMaxPossibleScore] = useState(0);
 
-  // Load stages on mount
   useEffect(() => {
     const loadStages = async () => {
       try {
         const loadedStages = await escapeRoomService.getStages();
         setStages(loadedStages);
         
-        // Calculate maximum possible score for balanced distribution (2 easy, 1 medium, 1 hard)
         const maxScore = loadedStages.reduce((total, stage) => total + stage.points, 0);
         setMaxPossibleScore(maxScore);
         
@@ -46,7 +44,7 @@ export const useEscapeRoom = () => {
     loadStages();
   }, []);
 
-  // Timer effect & Game Lost Logic
+
   useEffect(() => {
     if (gameState.timerStarted && gameState.timeLeft > 0 && !gameState.gameWon && !gameState.gameLost) {
       const timer = setTimeout(() => {
@@ -86,13 +84,12 @@ export const useEscapeRoom = () => {
   }, []);
 
   const calculateLeaderboardScore = useCallback((points: number, maxPoints: number, timeCompleted: number, timeLimit: number): number => {
-    // Points ratio (0 to 1)
+    
     const pointsRatio = maxPoints > 0 ? points / maxPoints : 0;
     
     // Time bonus (0 to 1) - faster completion = higher bonus
     const timeRatio = timeLimit > 0 ? Math.max(0, (timeLimit - timeCompleted) / timeLimit) : 0;
     
-    // Timeout penalty: -100 points if time exceeded
     const timeoutPenalty = timeCompleted > timeLimit ? 100 : 0;
     
     // Combined score: 70% points ratio + 30% time bonus - timeout penalty
@@ -149,7 +146,7 @@ export const useEscapeRoom = () => {
     }
   }, [gameState.playerName, gameState.stagesCompleted.length, gameState.customTime, maxPossibleScore, getGameMode, calculateLeaderboardScore]);
 
-  // Game completion and save logic (Game Won)
+
   useEffect(() => {
     if (gameState.stagesCompleted.length === stages.length && stages.length > 0 && !gameState.gameWon) {
       console.log('🎉 Game completed! Calculating final score and saving...');
@@ -174,7 +171,7 @@ export const useEscapeRoom = () => {
 
   const startGame = useCallback(async () => {
     try {
-      // Load fresh questions for each game
+      
       const freshStages = await escapeRoomService.getStages();
       setStages(freshStages);
       
@@ -182,7 +179,7 @@ export const useEscapeRoom = () => {
         timeLeft: gameState.customTime * 60,
         customTime: gameState.customTime,
         timerStarted: true,
-        currentStage: -1, // Start with question selection
+        currentStage: -1, 
         userCode: '',
         feedback: '',
         stagesCompleted: [],
@@ -195,12 +192,12 @@ export const useEscapeRoom = () => {
       });
     } catch (error) {
       console.error('Error starting game:', error);
-      // Fallback to existing stages
+      
       setGameState({
         timeLeft: gameState.customTime * 60,
         customTime: gameState.customTime,
         timerStarted: true,
-        currentStage: -1, // Start with question selection
+        currentStage: -1, 
         userCode: '',
         feedback: '',
         stagesCompleted: [],
@@ -216,7 +213,7 @@ export const useEscapeRoom = () => {
 
   const resetGame = useCallback(() => {
     setGameState({
-      timeLeft: 1800, // 30 minutes
+      timeLeft: 1800, 
       customTime: 30,
       timerStarted: false,
       currentStage: 0,
@@ -264,14 +261,12 @@ export const useEscapeRoom = () => {
     }));
   }, []);
 
-  // --- FIX APPLIED HERE ---
-  // Enhanced normalizeCode function for more flexible checking.
   const normalizeCode = useCallback((code: string): string => {
     return code
       .trim()
-      .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-      .replace(/[,\[\]]/g, ' ') // Normalize array formatting
-      .replace(/\s*,\s*/g, ',') // Normalize comma spacing
+      .replace(/\s+/g, ' ') 
+      .replace(/[,\[\]]/g, ' ') 
+      .replace(/\s*,\s*/g, ',')
       .toLowerCase();
   }, []);
 
@@ -280,7 +275,7 @@ export const useEscapeRoom = () => {
     if (!currentStageData || gameState.stagesCompleted.includes(currentStageData.id)) return;
 
     try {
-      // Use API to check the answer
+
       const result = await escapeRoomService.checkAnswer(
         currentStageData.id,
         gameState.userCode

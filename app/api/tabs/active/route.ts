@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/tabs/active - Get active tab ID (stored in cookies/localStorage on client)
 export async function GET() {
   try {
-    // Since active tab is managed on the client side via cookies,
-    // this endpoint can be used for validation or fallback logic
     return NextResponse.json({ 
       success: true, 
       message: 'Active tab is managed on the client side' 
@@ -19,7 +16,6 @@ export async function GET() {
   }
 }
 
-// POST /api/tabs/active - Validate active tab exists
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

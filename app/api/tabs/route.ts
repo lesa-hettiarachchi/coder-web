@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { TabFormData } from '@/types/tabs';
 
-// GET /api/tabs - Get all tabs
 export async function GET() {
   try {
     const tabs = await prisma.tab.findMany({
@@ -24,12 +23,10 @@ export async function GET() {
   }
 }
 
-// POST /api/tabs - Create a new tab
 export async function POST(request: NextRequest) {
   try {
     const body: TabFormData = await request.json();
     
-    // Validate required fields
     if (!body.title || !body.instructions || !body.code) {
       return NextResponse.json(
         { success: false, error: 'Title, instructions, and code are required' },
@@ -37,7 +34,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if we've reached the maximum number of tabs (20)
     const tabCount = await prisma.tab.count();
     if (tabCount >= 20) {
       return NextResponse.json(

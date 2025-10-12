@@ -5,37 +5,31 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const count = parseInt(searchParams.get('count') || '4');
-    const difficulty = searchParams.get('difficulty'); // 'easy', 'medium', 'hard', or null for balanced
+    const difficulty = searchParams.get('difficulty');
     
-    // Get all active stages from database
     const allStages = await escapeRoomDatabaseService.getEscapeRoomStages();
     
     let selectedStages = [];
     
-    // If specific difficulty requested, return that difficulty
     if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
       const filteredStages = allStages.filter(stage => stage.difficulty === difficulty);
       const shuffled = [...filteredStages].sort(() => Math.random() - 0.5);
       selectedStages = shuffled.slice(0, Math.min(count, filteredStages.length));
     } else {
-      // Balanced selection: 2 easy, 1 medium, 1 hard
       const easyStages = allStages.filter(stage => stage.difficulty === 'easy');
       const mediumStages = allStages.filter(stage => stage.difficulty === 'medium');
       const hardStages = allStages.filter(stage => stage.difficulty === 'hard');
       
-      // Shuffle each difficulty group
       const shuffledEasy = [...easyStages].sort(() => Math.random() - 0.5);
       const shuffledMedium = [...mediumStages].sort(() => Math.random() - 0.5);
       const shuffledHard = [...hardStages].sort(() => Math.random() - 0.5);
       
-      // Select 2 easy, 1 medium, 1 hard
       selectedStages = [
         ...shuffledEasy.slice(0, 2),
         ...shuffledMedium.slice(0, 1),
         ...shuffledHard.slice(0, 1)
       ];
       
-      // If we don't have enough of any difficulty, fill with available stages
       if (selectedStages.length < 4) {
         const usedIds = new Set(selectedStages.map(s => s.id));
         const remainingStages = allStages
@@ -46,14 +40,12 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Sort by difficulty for better game flow (easy -> medium -> hard)
     selectedStages.sort((a, b) => {
       const difficultyOrder = { 'easy': 1, 'medium': 2, 'hard': 3 };
       return difficultyOrder[a.difficulty as keyof typeof difficultyOrder] - 
              difficultyOrder[b.difficulty as keyof typeof difficultyOrder];
     });
     
-    // Calculate maximum possible score
     const maxScore = selectedStages.reduce((total, stage) => total + stage.points, 0);
     
     return NextResponse.json({
