@@ -5,10 +5,11 @@ import { TabFormData } from '@/types/tabs';
 // GET /api/tabs/[id] - Get a specific tab
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -44,10 +45,11 @@ export async function GET(
 // PUT /api/tabs/[id] - Update a specific tab
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -103,10 +105,11 @@ export async function PUT(
 // DELETE /api/tabs/[id] - Delete a specific tab
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     
     if (isNaN(id)) {
       return NextResponse.json(

@@ -14,13 +14,14 @@ export const useNavigationCookies = () => {
 
     const lastVisitedPage = Cookies.get('activePage');
     
-    if (lastVisitedPage && lastVisitedPage !== pathname) {
+    // Disable automatic redirect from home page
+    // Users should stay on home page when they navigate there directly
+    // Only redirect if they're on other pages and want to continue where they left off
+    if (lastVisitedPage && pathname !== '/' && lastVisitedPage !== pathname) {
       const validPaths = ['/', '/about', '/coding-races', '/escape-rooms', '/court-rooms'];
       if (validPaths.includes(lastVisitedPage)) {
-        if (pathname === '/' && !hasNavigatedRef.current) {
-          hasNavigatedRef.current = true;
-          router.push(lastVisitedPage);
-        }
+        hasNavigatedRef.current = true;
+        router.push(lastVisitedPage);
       }
     }
   }, [router, pathname]);
