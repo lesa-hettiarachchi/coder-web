@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Basic health check
     return NextResponse.json(
       { 
         status: 'healthy', 

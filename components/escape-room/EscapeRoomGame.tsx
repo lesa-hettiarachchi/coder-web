@@ -30,7 +30,7 @@ export const EscapeRoomGame: React.FC = () => {
     getCurrentStagePoints
   } = useEscapeRoom();
 
-  // Auto-show leaderboard when game ends
+  
   React.useEffect(() => {
     if (gameState.gameWon || gameState.gameLost) {
       const timer = setTimeout(() => {
@@ -57,7 +57,6 @@ export const EscapeRoomGame: React.FC = () => {
     );
   }
 
-  // Game not started - show start screen
   if (!gameState.timerStarted) {
     return (
       <>
@@ -204,7 +203,6 @@ export const EscapeRoomGame: React.FC = () => {
     );
   }
 
-  // Game won - show victory screen
   if (gameState.gameWon) {
     return (
       <>
@@ -275,7 +273,6 @@ export const EscapeRoomGame: React.FC = () => {
     );
   }
 
-  // Game lost - show failure screen
   if (gameState.gameLost) {
     return (
       <>
@@ -322,11 +319,9 @@ export const EscapeRoomGame: React.FC = () => {
     );
   }
 
-  // Main game interface
   const currentStage = getCurrentStage();
   const stagePoints = getCurrentStagePoints();
   
-  // Show question selection if no specific question is selected
   if (gameState.currentStage === -1) {
     return (
       <>
@@ -380,7 +375,6 @@ export const EscapeRoomGame: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Question Selection Grid */}
               <Card>
                 <CardContent className="p-6">
                   <div className="text-center mb-6">
@@ -463,7 +457,7 @@ export const EscapeRoomGame: React.FC = () => {
       <EscapeRoomBackground gameState="playing">
         <div className="p-4">
           <div className="max-w-6xl mx-auto space-y-4">
-        {/* Header */}
+
         <Card className="border-2 border-[hsl(var(--destructive))]">
           <CardContent className="p-4">
             <div className="flex justify-between items-center flex-wrap gap-4">
@@ -479,7 +473,7 @@ export const EscapeRoomGame: React.FC = () => {
                   </p>
                 </div>
               </div>
-              {/* --- UI CHANGE APPLIED HERE --- */}
+
               <div className="flex items-center space-x-4 md:space-x-6">
                 <div className="text-center">
                   <Clock className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
@@ -502,10 +496,10 @@ export const EscapeRoomGame: React.FC = () => {
                           / {maxPossibleScore} max
                         </p>
                       </div>
-                {/* Back to Questions Button */}
+
                 <Button
                   onClick={() => {
-                    updateCurrentStage(-1); // -1 means show question selection
+                    updateCurrentStage(-1);
                   }}
                   variant="outline"
                   size="sm"
@@ -515,12 +509,11 @@ export const EscapeRoomGame: React.FC = () => {
                   Back to Questions
                 </Button>
                 
-                {/* --- ADDED: Leaderboard Button --- */}
                 <Button
                   onClick={() => setShowLeaderboard(true)}
                   variant="outline"
                   size="sm"
-                  className="hidden md:flex" // Hides on small screens, shows on medium and up
+                  className="hidden md:flex" 
                 >
                   <Trophy className="w-4 h-4 mr-2" />
                   Leaderboard
@@ -531,7 +524,7 @@ export const EscapeRoomGame: React.FC = () => {
         </Card>
 
 
-        {/* Main Challenge Area */}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Instructions */}
           <Card className="border-2 border-[hsl(var(--primary))]">
@@ -605,7 +598,6 @@ export const EscapeRoomGame: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Code Editor */}
           <Card className="border-2 border-[hsl(var(--primary))]">
             <CardHeader>
               <CardTitle>Code Editor</CardTitle>
