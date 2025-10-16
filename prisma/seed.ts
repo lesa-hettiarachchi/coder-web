@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { escapeRoomQuestionBank } from '../data/escapeRoomQuestions';
+import { escapeRoomQuestionBank } from './escapeRoomQuestions';
 
 const prisma = new PrismaClient();
 
