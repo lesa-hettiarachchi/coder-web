@@ -31,7 +31,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # Resource limits for EC2
+
     deploy:
       resources:
         limits:
@@ -39,7 +39,7 @@ services:
         reservations:
           memory: 512M
 
-  # Optional: Nginx reverse proxy for better performance
+
   nginx:
     image: nginx:alpine
     ports:
@@ -51,7 +51,7 @@ services:
       - coder-web
     restart: unless-stopped
     profiles:
-      - nginx  # Only start with --profile nginx
+      - nginx  
 
 volumes:
   coder_web_data:
