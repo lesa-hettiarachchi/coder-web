@@ -15,7 +15,7 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client (this is needed for the build)
 RUN npx prisma generate
 
 # Build the application
@@ -25,15 +25,21 @@ RUN npm run build
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy prisma files and database to ensure they're accessible
-COPY --chown=nextjs:nodejs prisma/ ./prisma/
-
-# Ensure database file exists and is accessible
-RUN touch ./prisma/dev.db && chown nextjs:nodejs ./prisma/dev.db
-
-# Set permissions
+# Set permissions for the entire app directory
+# This ensures the 'nextjs' user owns everything, including node_modules
 RUN chown -R nextjs:nodejs /app
+
+# Switch to the non-root user
 USER nextjs
+
+# --- NEW: Add the entrypoint script ---
+# Switch back to root temporarily to copy and set permissions
+USER root
+COPY --chown=nextjs:nodejs entrypoint.sh .
+RUN chmod +x entrypoint.sh
+# Switch back to the app user
+USER nextjs
+# --- END NEW ---
 
 EXPOSE 3000
 
@@ -42,14 +48,6 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create startup script
-RUN echo '#!/bin/sh\n\
-echo "Creating database and seeding..."\n\
-npx prisma db push\n\
-npx tsx prisma/seed.ts\n\
-echo "Starting application..."\n\
-node .next/standalone/server.js\n\
-' > /app/start.sh && chmod +x /app/start.sh
-
-# Start the application
-CMD ["/app/start.sh"]
+# --- MODIFIED: Set the entrypoint and keep the command ---
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["npm", "start"]
