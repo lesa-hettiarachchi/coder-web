@@ -46,13 +46,15 @@ export async function GET(request: NextRequest) {
              difficultyOrder[b.difficulty as keyof typeof difficultyOrder];
     });
     
-    const maxScore = selectedStages.reduce((total, stage) => total + stage.points, 0);
+    const baseMaxScore = selectedStages.reduce((total, stage) => total + stage.points, 0);
+    const maxTimeBonus = 100; // Maximum time bonus points
+    const maxPossibleScore = baseMaxScore + maxTimeBonus;
     
     return NextResponse.json({
       stages: selectedStages,
       total: selectedStages.length,
       difficulty: difficulty || 'balanced',
-      maxPossibleScore: maxScore,
+      maxPossibleScore: maxPossibleScore,
       distribution: {
         easy: selectedStages.filter(s => s.difficulty === 'easy').length,
         medium: selectedStages.filter(s => s.difficulty === 'medium').length,

@@ -1,61 +1,91 @@
 const AWS = require('aws-sdk');
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.LEADERBOARD_TABLE || 'coder-web-leaderboard';
+// Ensure your environment variable is set in your Lambda configuration
+const TABLE_NAME = process.env.LEADERBOARD_TABLE || 'coder-web-leaderboard'; 
 
 exports.handler = async (event) => {
-    console.log('Processing leaderboard data:', JSON.stringify(event, null, 2));
+    // It's good practice to handle pre-flight OPTIONS requests for CORS
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 204,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+            },
+            body: ''
+        };
+    }
+    
+    console.log('Received leaderboard data:', event.body);
     
     try {
-        const { playerName, finalScore, timeCompleted, stagesCompleted } = JSON.parse(event.body);
+        const { 
+            playerName, 
+            finalScore,         // This is the base points from stages
+            leaderboardScore,   // The score calculated on the frontend
+            timeCompleted, 
+            stagesCompleted,
+            gameMode 
+        } = JSON.parse(event.body);
         
-        // Calculate leaderboard score (70% accuracy, 30% speed)
-        const accuracyScore = (stagesCompleted / 4) * 100;
-        const speedScore = Math.max(0, 100 - (timeCompleted / 30)); // 30 minutes max
-        const leaderboardScore = Math.round((accuracyScore * 0.7) + (speedScore * 0.3));
+
+        // Basic validation
+        if (!playerName || typeof leaderboardScore !== 'number' || typeof finalScore !== 'number') {
+            throw new Error('Missing or invalid required fields: playerName, finalScore, leaderboardScore.');
+        }
         
         const item = {
-            id: Date.now().toString(),
+            id: `${Date.now()}-${playerName.replace(/\s+/g, '-')}`, // More unique ID
             playerName,
-            finalScore,
-            leaderboardScore,
+            finalScore,         // Storing base points
+            leaderboardScore,   // Storing the calculated leaderboard score
             timeCompleted,
             stagesCompleted,
-            gameMode: 'escape-room',
+            gameMode: gameMode || 'escape-room', // Use provided gameMode or default
             createdAt: new Date().toISOString(),
-            ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) // 30 days TTL
+            // Set item to expire after 30 days
+            ttl: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) 
         };
         
+        console.log('Saving item to DynamoDB:', JSON.stringify(item, null, 2));
+
         await dynamodb.put({
             TableName: TABLE_NAME,
             Item: item
         }).promise();
         
-        // Get top 10 scores
+        // A DynamoDB Scan is inefficient for large tables. 
+        // For production, consider using a Global Secondary Index (GSI) on 'leaderboardScore'.
+        // However, for a small leaderboard, Scan is acceptable.
         const result = await dynamodb.scan({
             TableName: TABLE_NAME,
             FilterExpression: 'gameMode = :mode',
             ExpressionAttributeValues: {
-                ':mode': 'escape-room'
+                ':mode': item.gameMode
             }
         }).promise();
         
         const topScores = result.Items
             .sort((a, b) => b.leaderboardScore - a.leaderboardScore)
             .slice(0, 10);
+            
+        // Find the new player's rank among the top scores.
+        const playerRank = topScores.findIndex(score => score.id === item.id) + 1;
         
         return {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                'Access-Control-Allow-Origin': '*' // Adjust for production if needed
             },
             body: JSON.stringify({
                 success: true,
+                message: 'Score saved successfully.',
                 leaderboard: topScores,
-                playerRank: topScores.findIndex(score => score.id === item.id) + 1
+                // If player is not in top 10, rank will be 0, which is a clear indicator.
+                playerRank: playerRank 
             })
         };
         
@@ -70,9 +100,9 @@ exports.handler = async (event) => {
             },
             body: JSON.stringify({
                 success: false,
-                error: 'Failed to process leaderboard data'
+                error: 'Failed to process leaderboard data.',
+                message: error.message
             })
         };
     }
 };
-

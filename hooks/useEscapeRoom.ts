@@ -64,10 +64,11 @@ export const useEscapeRoom = () => {
       if (gameState.playerName.trim()) {
         console.log('Saving to leaderboard - game lost');
         const timeCompleted = gameState.customTime * 60;
+        // For game lost, use base points without time bonus
         saveToLeaderboard(gameState.currentPoints, timeCompleted);
       }
     }
-  }, [gameState.timeLeft, gameState.timerStarted, gameState.gameWon, gameState.gameLost]);
+  }, [gameState.timeLeft, gameState.timerStarted, gameState.gameWon, gameState.gameLost, gameState.playerName, gameState.currentPoints, gameState.customTime]);
 
   const getGameMode = useCallback((timeCompleted: number): string => {
     const timeInMinutes = timeCompleted / 60;
@@ -84,29 +85,35 @@ export const useEscapeRoom = () => {
   }, []);
 
   const calculateLeaderboardScore = useCallback((points: number, maxPoints: number, timeCompleted: number, timeLimit: number): number => {
+    // Ensure points don't exceed maximum possible
+    const cappedPoints = Math.min(points, maxPoints);
     
-    const pointsRatio = maxPoints > 0 ? points / maxPoints : 0;
+    // Rule 1: Accuracy = points gained / maximum points (capped at 1.0)
+    const accuracyRatio = maxPoints > 0 ? Math.min(cappedPoints / maxPoints, 1.0) : 0;
+
+    // Rule 2: Time bonus is a ratio from 1.0 (instant) to 0.0 (time up)
+    const timeBonusRatio = timeLimit > 0 ? Math.max(0, (timeLimit - timeCompleted) / timeLimit) : 0;
+
+    // Rule 3: Weighted score = accuracy * 0.7 + time bonus * 0.3, scaled to 1000
+    const weightedScore = (accuracyRatio * 0.7 + timeBonusRatio * 0.3) * 1000;
+
+    // Rule 4: -100 for time runs out (only if the game was not won)
+    const timeoutPenalty = (timeCompleted >= timeLimit && cappedPoints < maxPoints) ? 100 : 0;
+
+    const finalScore = weightedScore - timeoutPenalty;
     
-    // Time bonus (0 to 1) - faster completion = higher bonus
-    const timeRatio = timeLimit > 0 ? Math.max(0, (timeLimit - timeCompleted) / timeLimit) : 0;
-    
-    const timeoutPenalty = timeCompleted > timeLimit ? 100 : 0;
-    
-    // Combined score: 70% points ratio + 30% time bonus - timeout penalty
-    // Scale to 0-1000 for better leaderboard display
-    const combinedScore = (pointsRatio * 0.7 + timeRatio * 0.3) * 1000 - timeoutPenalty;
-    
-    return Math.round(Math.max(0, combinedScore)); // Ensure score doesn't go below 0
+    // Ensure score is a non-negative integer and doesn't exceed 1000
+    return Math.round(Math.max(0, Math.min(1000, finalScore)));
   }, []);
 
-  const saveToLeaderboard = useCallback(async (finalScore: number, timeCompleted: number) => {
+  const saveToLeaderboard = useCallback(async (basePoints: number, timeCompleted: number) => {
     const gameMode = getGameMode(timeCompleted);
-    const timeLimit = gameState.customTime * 60; // Convert minutes to seconds
-    const leaderboardScore = calculateLeaderboardScore(finalScore, maxPossibleScore, timeCompleted, timeLimit);
+    const timeLimit = gameState.customTime * 60;
+    const leaderboardScore = calculateLeaderboardScore(basePoints, maxPossibleScore, timeCompleted, timeLimit);
     
     console.log('🚀 Attempting to save to leaderboard:', {
       playerName: gameState.playerName,
-      finalScore,
+      basePoints,
       maxPossibleScore,
       timeCompleted,
       timeLimit,
@@ -124,7 +131,7 @@ export const useEscapeRoom = () => {
         },
         body: JSON.stringify({
           playerName: gameState.playerName,
-          finalScore,
+          finalScore: basePoints,
           leaderboardScore,
           timeCompleted,
           timeLimit,
@@ -151,27 +158,29 @@ export const useEscapeRoom = () => {
     if (gameState.stagesCompleted.length === stages.length && stages.length > 0 && !gameState.gameWon) {
       console.log('🎉 Game completed! Calculating final score and saving...');
 
-      const timeBonus = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 100);
-      const finalScore = gameState.currentPoints + timeBonus;
       const timeCompleted = gameState.customTime * 60 - gameState.timeLeft;
+      const timeBonusPercentage = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 100);
+      
+      // Calculate time bonus as a percentage of the base score, not additional points
+      const timeBonusPoints = Math.floor((gameState.currentPoints * timeBonusPercentage) / 100);
+      const finalDisplayScore = Math.min(gameState.currentPoints + timeBonusPoints, maxPossibleScore);
 
       setGameState(prev => ({
         ...prev,
         gameWon: true,
-        currentPoints: finalScore,
-        feedback: `Congratulations! You've escaped the room! Final Score: ${finalScore} (${prev.currentPoints} + ${timeBonus} time bonus)`
+        currentPoints: finalDisplayScore,
+        feedback: `Congratulations! You've escaped! Final Score: ${finalDisplayScore}/${maxPossibleScore} (${prev.currentPoints} base + ${timeBonusPoints} time bonus)`
       }));
 
       if (gameState.playerName.trim()) {
         console.log('🏆 Saving to leaderboard - game won');
-        saveToLeaderboard(finalScore, timeCompleted);
+        saveToLeaderboard(finalDisplayScore, timeCompleted);
       }
     }
-  }, [gameState.stagesCompleted.length, stages.length, gameState.gameWon, gameState.currentPoints, gameState.timeLeft, gameState.customTime, gameState.playerName, saveToLeaderboard]);
+  }, [gameState.stagesCompleted.length, stages.length, gameState.gameWon, gameState.currentPoints, gameState.timeLeft, gameState.customTime, gameState.playerName, saveToLeaderboard, maxPossibleScore]);
 
   const startGame = useCallback(async () => {
     try {
-      
       const freshStages = await escapeRoomService.getStages();
       setStages(freshStages);
       
@@ -192,24 +201,22 @@ export const useEscapeRoom = () => {
       });
     } catch (error) {
       console.error('Error starting game:', error);
-      
-      setGameState({
-        timeLeft: gameState.customTime * 60,
-        customTime: gameState.customTime,
+      setGameState(prev => ({
+        ...prev,
+        timeLeft: prev.customTime * 60,
         timerStarted: true,
-        currentStage: -1, 
+        currentStage: -1,
         userCode: '',
-        feedback: '',
+        feedback: 'Error loading stages. Please refresh.',
         stagesCompleted: [],
         gameWon: false,
         gameLost: false,
         currentPoints: 0,
         hintsUsed: [],
         showHint: false,
-        playerName: gameState.playerName
-      });
+      }));
     }
-  }, [gameState.customTime, gameState.playerName, stages]);
+  }, [gameState.customTime, gameState.playerName]);
 
   const resetGame = useCallback(() => {
     setGameState({
@@ -251,57 +258,68 @@ export const useEscapeRoom = () => {
     }));
   }, []);
 
-  const updateCurrentStage = useCallback((stageIndex: number, stageData?: EscapeRoomStage) => {
+  const updateCurrentStage = useCallback((stageIndex: number) => {
     setGameState(prev => ({
       ...prev,
       currentStage: stageIndex,
-      userCode: stageData?.starterCode || '',
+      userCode: stages[stageIndex]?.starterCode || '',
       feedback: '',
       showHint: false
     }));
-  }, []);
-
-  const normalizeCode = useCallback((code: string): string => {
-    return code
-      .trim()
-      .replace(/\s+/g, ' ') 
-      .replace(/[,\[\]]/g, ' ') 
-      .replace(/\s*,\s*/g, ',')
-      .toLowerCase();
-  }, []);
+  }, [stages]);
 
   const checkSolution = useCallback(async () => {
     const currentStageData = stages[gameState.currentStage];
     if (!currentStageData || gameState.stagesCompleted.includes(currentStageData.id)) return;
 
     try {
-
       const result = await escapeRoomService.checkAnswer(
         currentStageData.id,
-        gameState.userCode
+        gameState.userCode,
+        undefined // sessionId
       );
 
       if (result.isCorrect) {
-        const newStagesCompleted = [...new Set([...gameState.stagesCompleted, currentStageData.id])];
         const hintPenalty = gameState.hintsUsed.includes(currentStageData.id) ? 20 : 0;
-        const stagePoints = result.points - hintPenalty;
+        const stagePoints = Math.max(0, result.points - hintPenalty);
         
-        setGameState(prev => ({
-          ...prev,
-          feedback: `✓ Correct! +${stagePoints} points (${result.points} base${hintPenalty > 0 ? ` - ${hintPenalty} hint penalty` : ''})`,
-          stagesCompleted: newStagesCompleted,
-          currentPoints: prev.currentPoints + stagePoints
-        }));
+        setGameState(prev => {
+          const newPoints = prev.currentPoints + stagePoints;
+          // Ensure points don't exceed maximum possible
+          const cappedPoints = Math.min(newPoints, maxPossibleScore);
+          
+          let feedbackMessage = `✓ Correct! +${stagePoints} points (${result.points} base${hintPenalty > 0 ? ` - ${hintPenalty} hint penalty` : ''})`;
+          
+          // Add linting feedback if available
+          if (result.feedback && result.method === 'linting') {
+            feedbackMessage += `\n\n${result.feedback}`;
+          }
+          
+          return {
+            ...prev,
+            feedback: feedbackMessage,
+            stagesCompleted: [...new Set([...prev.stagesCompleted, currentStageData.id])],
+            currentPoints: cappedPoints
+          };
+        });
 
         setTimeout(() => {
-          if (gameState.currentStage < stages.length - 1) {
-            goToNextStage();
+          const nextStageIndex = gameState.currentStage + 1;
+          if (nextStageIndex < stages.length) {
+            updateCurrentStage(nextStageIndex);
           }
         }, 1500);
       } else {
+        let feedbackMessage = '✗ Not quite right. Check the hint and try again!';
+        
+        // Add linting feedback if available
+        if (result.feedback && result.method === 'linting') {
+          feedbackMessage = result.feedback;
+        }
+        
         setGameState(prev => ({
           ...prev,
-          feedback: '✗ Not quite right. Check the hint and try again!'
+          feedback: feedbackMessage
         }));
       }
     } catch (error) {
@@ -311,31 +329,19 @@ export const useEscapeRoom = () => {
         feedback: '✗ Error checking solution. Please try again!'
       }));
     }
-  }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, gameState.hintsUsed, stages]);
+  }, [gameState.currentStage, gameState.userCode, gameState.stagesCompleted, gameState.hintsUsed, stages, updateCurrentStage]);
 
   const goToNextStage = useCallback(() => {
     if (gameState.currentStage < stages.length - 1) {
-      setGameState(prev => ({
-        ...prev,
-        currentStage: prev.currentStage + 1,
-        userCode: stages[prev.currentStage + 1]?.starterCode || '',
-        feedback: '',
-        showHint: false
-      }));
+      updateCurrentStage(gameState.currentStage + 1);
     }
-  }, [gameState.currentStage, stages]);
+  }, [gameState.currentStage, stages.length, updateCurrentStage]);
 
   const goToPreviousStage = useCallback(() => {
     if (gameState.currentStage > 0) {
-      setGameState(prev => ({
-        ...prev,
-        currentStage: prev.currentStage - 1,
-        userCode: stages[prev.currentStage - 1]?.starterCode || '',
-        feedback: '',
-        showHint: false
-      }));
+      updateCurrentStage(gameState.currentStage - 1);
     }
-  }, [gameState.currentStage, stages]);
+  }, [gameState.currentStage, updateCurrentStage]);
 
   const useHint = useCallback(() => {
     const currentStageData = stages[gameState.currentStage];
@@ -344,8 +350,8 @@ export const useEscapeRoom = () => {
     setGameState(prev => ({
       ...prev,
       showHint: true,
-      hintsUsed: [...prev.hintsUsed, currentStageData.id],
-      feedback: `Hint used! -20 points deducted.`
+      hintsUsed: [...new Set([...prev.hintsUsed, currentStageData.id])],
+      feedback: `Hint used! A 20 point penalty will be applied for this stage.`
     }));
   }, [gameState.currentStage, gameState.hintsUsed, stages]);
 
@@ -361,18 +367,18 @@ export const useEscapeRoom = () => {
 
   const getCurrentStagePoints = useCallback(() => {
     const currentStageData = stages[gameState.currentStage];
-    if (!currentStageData) return { base: 0, timeBonus: 0, total: 0 };
+    if (!currentStageData) return { base: 0, penalty: 0, total: 0 };
     
-    const timeBonus = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 50);
     const hintPenalty = gameState.hintsUsed.includes(currentStageData.id) ? 20 : 0;
-    const basePoints = currentStageData.points - hintPenalty;
+    const basePoints = currentStageData.points;
+    const total = Math.max(0, basePoints - hintPenalty);
     
     return {
       base: basePoints,
-      timeBonus: timeBonus,
-      total: basePoints + timeBonus
+      penalty: hintPenalty,
+      total: total
     };
-  }, [gameState.currentStage, gameState.timeLeft, gameState.customTime, gameState.hintsUsed, stages]);
+  }, [gameState.currentStage, gameState.hintsUsed, stages]);
 
   return {
     gameState,

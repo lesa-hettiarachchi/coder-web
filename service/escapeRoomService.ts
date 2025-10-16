@@ -31,6 +31,9 @@ export const escapeRoomService = {
     points: number;
     difficulty: string;
     hint: string;
+    feedback?: string;
+    lintingDetails?: any;
+    method?: string;
   }> {
     try {
       const response = await fetch('/api/escape-room/check-answer', {
@@ -52,6 +55,9 @@ export const escapeRoomService = {
           points: result.points,
           difficulty: result.difficulty,
           hint: result.hint,
+          feedback: result.feedback,
+          lintingDetails: result.lintingDetails,
+          method: result.method,
         };
       } else {
         throw new Error(`API error: ${response.status}`);
@@ -64,6 +70,7 @@ export const escapeRoomService = {
         points: 0,
         difficulty: 'medium',
         hint: 'Please try again',
+        feedback: 'Error checking solution. Please try again!',
       };
     }
   },

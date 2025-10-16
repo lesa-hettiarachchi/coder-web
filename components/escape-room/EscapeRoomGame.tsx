@@ -403,7 +403,7 @@ export const EscapeRoomGame: React.FC = () => {
                       <button
                         key={stage.id}
                         onClick={() => {
-                          updateCurrentStage(idx, stage);
+                          updateCurrentStage(idx);
                         }}
                         className={`relative group p-6 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                           gameState.stagesCompleted.includes(stage.id) 
