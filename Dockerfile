@@ -18,7 +18,7 @@ COPY . .
 # Generate Prisma client and create database
 RUN npx prisma generate
 RUN npx prisma db push
-RUN npx tsx scripts/seedEscapeRoomQuestions.ts
+RUN npx tsx prisma/seed.ts
 
 # Build the application
 RUN npm run build
