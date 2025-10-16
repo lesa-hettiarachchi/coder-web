@@ -15,8 +15,10 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client and create database
 RUN npx prisma generate
+RUN npx prisma migrate dev --name init
+RUN npm run seed-questions
 
 # Build the application
 RUN npm run build
