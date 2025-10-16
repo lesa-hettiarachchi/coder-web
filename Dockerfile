@@ -15,10 +15,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Generate Prisma client and create database
+# Generate Prisma client
 RUN npx prisma generate
-RUN npx prisma db push
-RUN npx tsx prisma/seed.ts
 
 # Build the application
 RUN npm run build
@@ -27,8 +25,11 @@ RUN npm run build
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy prisma files to ensure they're accessible
+# Copy prisma files and database to ensure they're accessible
 COPY --chown=nextjs:nodejs prisma/ ./prisma/
+
+# Ensure database file exists and is accessible
+RUN touch ./prisma/dev.db && chown nextjs:nodejs ./prisma/dev.db
 
 # Set permissions
 RUN chown -R nextjs:nodejs /app
@@ -41,5 +42,14 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Create startup script
+RUN echo '#!/bin/sh\n\
+echo "Creating database and seeding..."\n\
+npx prisma db push\n\
+npx tsx prisma/seed.ts\n\
+echo "Starting application..."\n\
+node .next/standalone/server.js\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
 # Start the application
-CMD ["npm", "start"]
+CMD ["/app/start.sh"]
