@@ -17,18 +17,18 @@ COPY . .
 
 # Generate Prisma client and create database
 RUN npx prisma generate
-RUN npx prisma migrate deploy
+RUN npx prisma db push
 RUN npm run seed-questions
 
 # Build the application
 RUN npm run build
 
-# Remove dev dependencies to reduce image size
-RUN npm prune --production
-
 # Create user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Copy prisma files to ensure they're accessible
+COPY --chown=nextjs:nodejs prisma/ ./prisma/
 
 # Set permissions
 RUN chown -R nextjs:nodejs /app
