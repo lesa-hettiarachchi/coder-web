@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   coder-web:
     build:
@@ -13,8 +11,8 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
     volumes:
-      # Persist SQLite database
-      - /opt/coder-web/data/prisma:/app/prisma
+      # Persist ONLY the SQLite database file
+      - /opt/coder-web/data/prisma/dev.db:/app/prisma/dev.db
       # Persist any uploaded files or logs
       - /opt/coder-web/data/uploads:/app/data
       # Persist logs
@@ -31,14 +29,12 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
     deploy:
       resources:
         limits:
           memory: 1G
         reservations:
           memory: 512M
-
 
   nginx:
     image: nginx:alpine
@@ -51,8 +47,4 @@ services:
       - coder-web
     restart: unless-stopped
     profiles:
-      - nginx  
-
-volumes:
-  coder_web_data:
-    driver: local
+      - nginx
