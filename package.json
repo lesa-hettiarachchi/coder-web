@@ -10,9 +10,7 @@
     "seed-questions": "tsx scripts/seedEscapeRoomQuestions.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
-    "lighthouse": "node scripts/lighthouse.js",
-    "test:performance": "npm run lighthouse"
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@prisma/client": "^6.16.3",
@@ -39,10 +37,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "chrome-launcher": "^0.15.2",
     "eslint": "^9",
     "eslint-config-next": "15.4.7",
-    "lighthouse": "^11.4.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "tw-animate-css": "^1.3.7",
