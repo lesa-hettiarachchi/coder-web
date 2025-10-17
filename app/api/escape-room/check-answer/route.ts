@@ -13,11 +13,10 @@ export async function POST(request: NextRequest) {
 
     // Get stage data
     const stages = await escapeRoomDatabaseService.getEscapeRoomStages();
-    const stage = stages.find(s => s.id === stageId);
+    const stage = stages.find((s: { id: number }) => s.id === stageId);
     if (!stage) {
       return NextResponse.json({ error: 'Stage not found' }, { status: 404 });
     }
-
     // Validate code with linting
     const result = await escapeRoomLinter.validateStage(stageId, userCode, stage.points);
     
