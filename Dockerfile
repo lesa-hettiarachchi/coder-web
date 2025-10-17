@@ -8,11 +8,15 @@ RUN apk add --no-cache libc6-compat wget curl
 FROM base AS deps
 WORKDIR /app
 
+# Update npm to latest version
+RUN npm install -g npm@latest
+
 # Copy package files
 COPY package.json package-lock.json* ./
 
 # Install ALL dependencies (including dev dependencies for build)
-RUN npm ci
+# Use npm install if package-lock.json doesn't exist, otherwise use npm ci
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -45,7 +49,6 @@ COPY --from=builder /app/.next/standalone ./
 
 # Copy Prisma files and database
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/dev.db ./dev.db
 
 # Copy entrypoint script
 COPY --chown=nextjs:nodejs entrypoint.sh .
