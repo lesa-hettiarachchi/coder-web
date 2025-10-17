@@ -11,12 +11,10 @@ WORKDIR /app
 # Update npm to latest version
 RUN npm install -g npm@latest
 
-# Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json ./
 
-# Install ALL dependencies (including dev dependencies for build)
-# Use npm install if package-lock.json doesn't exist, otherwise use npm ci
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+RUN npm install --no-package-lock
 
 # Rebuild the source code only when needed
 FROM base AS builder
