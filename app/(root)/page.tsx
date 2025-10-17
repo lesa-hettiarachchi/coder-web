@@ -66,10 +66,33 @@ function HomeContent() {
       } else {
         htmlCode = generateHTMLFromTabs(selectedTabs);
       }
-      await navigator.clipboard.writeText(htmlCode);
-      toast.success(`${selectedTabs.length} tab(s) compiled and copied!`);
-    } catch {
-      toast.error('Failed to compile selected tabs');
+      
+      // Try clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(htmlCode);
+          toast.success(`${selectedTabs.length} tab(s) compiled and copied to clipboard!`);
+          return;
+        } catch (clipboardError) {
+          console.warn('Clipboard API failed, trying fallback method:', clipboardError);
+        }
+      }
+      
+      // Fallback: Create a downloadable file
+      const blob = new Blob([htmlCode], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tabs-${selectedTabs.length}-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`${selectedTabs.length} tab(s) compiled and downloaded!`);
+    } catch (error) {
+      console.error('Failed to compile selected tabs:', error);
+      toast.error(`Failed to compile selected tabs: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -81,10 +104,33 @@ function HomeContent() {
 
     try {
       const htmlCode = generateHTMLFromTabs(tabs);
-      await navigator.clipboard.writeText(htmlCode);
-      toast.success(`All ${tabs.length} tabs compiled and copied!`);
-    } catch {
-      toast.error('Failed to export all tabs');
+      
+      // Try clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(htmlCode);
+          toast.success(`All ${tabs.length} tabs compiled and copied to clipboard!`);
+          return;
+        } catch (clipboardError) {
+          console.warn('Clipboard API failed, trying fallback method:', clipboardError);
+        }
+      }
+      
+      // Fallback: Create a downloadable file
+      const blob = new Blob([htmlCode], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `all-tabs-${tabs.length}-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`All ${tabs.length} tabs compiled and downloaded!`);
+    } catch (error) {
+      console.error('Failed to export all tabs:', error);
+      toast.error(`Failed to export all tabs: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
