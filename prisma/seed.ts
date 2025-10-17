@@ -42,7 +42,7 @@ async function seedEscapeRoomQuestions() {
     });
     
     console.log('Questions by difficulty:');
-    difficultyCounts.forEach(group => {
+    difficultyCounts.forEach((group: { difficulty: string; _count: { difficulty: number } }) => {
       console.log(`  ${group.difficulty}: ${group._count.difficulty} questions`);
     });
     
