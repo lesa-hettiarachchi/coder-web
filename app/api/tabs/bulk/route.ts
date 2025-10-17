@@ -39,10 +39,10 @@ export async function POST(request: NextRequest) {
         await prisma.tab.deleteMany();
 
         const importedTabs = await prisma.tab.createMany({
-          data: data.tabs.map((tab: { title: string; instructions: string; code: string }) => ({
+          data: data.tabs.map((tab: { title: string; instructions: string; body: string }) => ({
             title: tab.title,
             instructions: tab.instructions,
-            code: tab.code
+            body: tab.body
           }))
         });
 

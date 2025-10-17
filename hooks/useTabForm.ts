@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 export interface TabFormData {
   title: string;
   instructions: string;
-  code: string;
+  body: string;
 }
 
 export interface TabFormOptions {
@@ -18,7 +18,7 @@ export const useTabForm = (options: TabFormOptions = {}) => {
   const [formData, setFormData] = useState<TabFormData>({
     title: options.initialData?.title || '',
     instructions: options.initialData?.instructions || '',
-    code: options.initialData?.code || '',
+    body: options.initialData?.body || '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +46,7 @@ export const useTabForm = (options: TabFormOptions = {}) => {
           action: 'add',
           title: formData.title,
           instructions: formData.instructions,
-          code: formData.code
+          body: formData.body
         });
         router.push(`/?${params.toString()}`);
       }
@@ -61,7 +61,7 @@ export const useTabForm = (options: TabFormOptions = {}) => {
     setFormData({
       title: options.initialData?.title || '',
       instructions: options.initialData?.instructions || '',
-      code: options.initialData?.code || '',
+      body: options.initialData?.body || '',
     });
   }, [options.initialData]);
 

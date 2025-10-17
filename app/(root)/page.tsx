@@ -10,6 +10,7 @@ import { useTabsManager } from '@/hooks/useTabManager';
 import { useUrlParams } from '@/hooks/useUrlParams';
 import { Tab, TabFormData } from '@/types/tabs';
 import { toast } from 'sonner';
+import { generateHTMLFromTab, generateHTMLFromTabs } from '@/utils/htmlGenerator';
 
 function HomeContent() {
   const router = useRouter();
@@ -49,20 +50,41 @@ function HomeContent() {
     const params = new URLSearchParams({
       title: tab.title,
       instructions: tab.instructions,
-      code: tab.code
+      body: tab.body
     });
     router.push(`/edit-tab/${tab.id}?${params.toString()}`);
   };
 
-  const handleCopyCode = async (): Promise<void> => {
-    const activeTab = getActiveTab();
-    if (!activeTab) return;
+
+  const handleCompileSelected = async (selectedTabs: Tab[]): Promise<void> => {
+    if (selectedTabs.length === 0) return;
 
     try {
-      await navigator.clipboard.writeText(activeTab.code);
-      toast.success('Code copied!');
+      let htmlCode: string;
+      if (selectedTabs.length === 1) {
+        htmlCode = generateHTMLFromTab(selectedTabs[0]);
+      } else {
+        htmlCode = generateHTMLFromTabs(selectedTabs);
+      }
+      await navigator.clipboard.writeText(htmlCode);
+      toast.success(`${selectedTabs.length} tab(s) compiled and copied!`);
     } catch {
-      toast.error('Failed to copy code');
+      toast.error('Failed to compile selected tabs');
+    }
+  };
+
+  const handleBulkExport = async (): Promise<void> => {
+    if (tabs.length === 0) {
+      toast.error('No tabs to export');
+      return;
+    }
+
+    try {
+      const htmlCode = generateHTMLFromTabs(tabs);
+      await navigator.clipboard.writeText(htmlCode);
+      toast.success(`All ${tabs.length} tabs compiled and copied!`);
+    } catch {
+      toast.error('Failed to export all tabs');
     }
   };
 
@@ -90,12 +112,13 @@ function HomeContent() {
           onTabSelect={setActiveTabId}
           onAddTab={handleAddTab}
           onEditTab={handleEditTab}
+          onBulkExport={handleBulkExport}
+          onCompileSelected={handleCompileSelected}
         />
 
         {activeTab && (
           <ContentSection
             activeTab={activeTab}
-            onCopyCode={handleCopyCode}
           />
         )}
 

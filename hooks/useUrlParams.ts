@@ -13,22 +13,22 @@ export const useUrlParams = (onAdd: Function, onEdit: Function, onDelete?: Funct
     const action = searchParams.get('action') as TabActionParams['action'];
     const title = searchParams.get('title');
     const instructions = searchParams.get('instructions');
-    const code = searchParams.get('code');
+    const body = searchParams.get('body');
     const id = searchParams.get('id');
 
-    const actionKey = `${action}-${id ?? ''}-${title ?? ''}-${instructions ?? ''}-${code ?? ''}`;
+    const actionKey = `${action}-${id ?? ''}-${title ?? ''}-${instructions ?? ''}-${body ?? ''}`;
     const lastActionKey = sessionStorage.getItem('lastTabActionKey');
 
-    if (action === 'add' && title && instructions && code) {
+    if (action === 'add' && title && instructions && body) {
       if (actionKey !== lastActionKey) {
-        onAdd({ title, instructions, code });
+        onAdd({ title, instructions, body });
         sessionStorage.setItem('lastTabActionKey', actionKey);
       }
       handledRef.current = true;
       router.replace('/');
-    } else if (action === 'edit' && id && title && instructions && code) {
+    } else if (action === 'edit' && id && title && instructions && body) {
       if (actionKey !== lastActionKey) {
-        onEdit(parseInt(id), { title, instructions, code });
+        onEdit(parseInt(id), { title, instructions, body });
         sessionStorage.setItem('lastTabActionKey', actionKey);
       }
       handledRef.current = true;

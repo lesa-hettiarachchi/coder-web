@@ -58,7 +58,7 @@ export async function PUT(
 
     const body: Partial<TabFormData> = await request.json();
     
-    if (!body.title && !body.instructions && !body.code) {
+    if (!body.title && !body.instructions && !body.body) {
       return NextResponse.json(
         { success: false, error: 'At least one field must be provided for update' },
         { status: 400 }
@@ -81,7 +81,7 @@ export async function PUT(
       data: {
         ...(body.title && { title: body.title }),
         ...(body.instructions && { instructions: body.instructions }),
-        ...(body.code && { code: body.code })
+        ...(body.body && { body: body.body })
       }
     });
 

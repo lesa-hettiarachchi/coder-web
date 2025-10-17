@@ -74,21 +74,21 @@ export const TabForm: React.FC<TabFormProps> = ({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="code" className="font-medium text-sm text-[hsl(var(--foreground))]">
-          Code
+        <Label htmlFor="body" className="font-medium text-sm text-[hsl(var(--foreground))]">
+          Body
         </Label>
         <Textarea
-          id="code"
-          value={formData.code}
-          onChange={onChange('code')}
+          id="body"
+          value={formData.body}
+          onChange={onChange('body')}
           rows={10}
-          placeholder="Enter your code..."
+          placeholder="Enter your body content..."
           required
           className="font-mono text-sm leading-6"
         />
-        {errors.code && (
+        {errors.body && (
           <span className="text-red-600 text-sm mt-1">
-            {errors.code}
+            {errors.body}
           </span>
         )}
       </div>

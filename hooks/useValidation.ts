@@ -4,7 +4,7 @@ import { TabFormData } from './useTabForm';
 export interface ValidationErrors {
   title?: string;
   instructions?: string;
-  code?: string;
+  body?: string;
 }
 
 export interface ValidationRules {
@@ -17,7 +17,7 @@ export interface ValidationRules {
     required?: boolean;
     minLength?: number;
   };
-  code?: {
+  body?: {
     required?: boolean;
     minLength?: number;
   };

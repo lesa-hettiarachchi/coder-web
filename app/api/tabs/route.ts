@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
   try {
     const body: TabFormData = await request.json();
     
-    if (!body.title || !body.instructions || !body.code) {
+    if (!body.title || !body.instructions || !body.body) {
       return NextResponse.json(
-        { success: false, error: 'Title, instructions, and code are required' },
+        { success: false, error: 'Title, instructions, and body are required' },
         { status: 400 }
       );
     }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       data: {
         title: body.title,
         instructions: body.instructions,
-        code: body.code
+        body: body.body
       }
     });
 

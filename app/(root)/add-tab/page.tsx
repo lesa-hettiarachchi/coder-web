@@ -18,7 +18,7 @@ export default function AddTab() {
   const { errors, validateForm } = useFormValidation({
     title: { required: true, minLength: 1, maxLength: 50 },
     instructions: { required: true, minLength: 10 },
-    code: { required: true, minLength: 1 }
+    body: { required: true, minLength: 1 }
   });
 
   const handleFormSubmit = (e: React.FormEvent) => {

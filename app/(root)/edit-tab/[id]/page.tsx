@@ -17,7 +17,7 @@ export default function EditTab() {
   const [formData, setFormData] = useState({
     title: '',
     instructions: '',
-    code: ''
+    body: ''
   });
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function EditTab() {
     setFormData({
       title: urlParams.get('title') || '',
       instructions: urlParams.get('instructions') || '',
-      code: urlParams.get('code') || ''
+      body: urlParams.get('body') || ''
     });
   }, []);
 
@@ -36,7 +36,7 @@ export default function EditTab() {
       id: String(params.id),
       title: formData.title,
       instructions: formData.instructions,
-      code: formData.code
+      body: formData.body
     });
     router.push(`/?${urlParams.toString()}`);
   };
@@ -100,13 +100,13 @@ export default function EditTab() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="code">Code</Label>
+                <Label htmlFor="body">Body</Label>
                 <Textarea
-                  id="code"
-                  value={formData.code}
-                  onChange={handleChange('code')}
+                  id="body"
+                  value={formData.body}
+                  onChange={handleChange('body')}
                   rows={10}
-                  placeholder="Enter your code..."
+                  placeholder="Enter your body content..."
                   className="font-mono text-sm"
                   required
                 />
