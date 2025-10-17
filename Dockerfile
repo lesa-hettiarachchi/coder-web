@@ -9,6 +9,9 @@ RUN npm ci
 # Copy the rest of the source code
 COPY . .
 
+# Generate Prisma client
+RUN npx prisma generate
+
 # Build the application with standalone output
 # Make sure next.config.js has "output: 'standalone'"
 RUN npm run build
@@ -27,6 +30,10 @@ USER nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# --- FIX: COPY THE PRISMA FOLDER ---
+# The entrypoint script needs this to run migrations and seeds.
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 # Copy the entrypoint script
 COPY --from=builder --chown=nextjs:nodejs /app/entrypoint.sh .
