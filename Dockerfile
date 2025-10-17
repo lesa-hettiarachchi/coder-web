@@ -1,65 +1,43 @@
-# Multi-stage Dockerfile for optimized production build
-FROM node:20-alpine AS base
-
-# Install required packages
-RUN apk add --no-cache libc6-compat wget curl
-
-# Install dependencies only when needed
-FROM base AS deps
+# Stage 1: Build the application
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Update npm to latest version
-RUN npm install -g npm@latest
+# Copy package files and install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-COPY package.json ./
-
-
-RUN npm install --no-package-lock
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the rest of the source code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build the application
+# Build the application with standalone output
+# Make sure next.config.js has "output: 'standalone'"
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# ---
+# Stage 2: Create the final production image
+FROM node:20-alpine
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Create user
+# Create a non-root user for security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-
-# Copy built application (standalone output)
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-
-# Copy Prisma files and database
-COPY --from=builder /app/prisma ./prisma
-
-# Copy entrypoint script
-COPY --chown=nextjs:nodejs entrypoint.sh .
-RUN chmod +x entrypoint.sh
-
-# Set proper permissions
-RUN chown -R nextjs:nodejs /app
-
-# Switch to the non-root user
 USER nextjs
+
+# Copy the essential outputs from the builder stage
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Copy the entrypoint script
+COPY --from=builder --chown=nextjs:nodejs /app/entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 EXPOSE 3000
 
-# Set the entrypoint and command
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENV NODE_ENV=production
+
+# Set the entrypoint to initialize the database
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Use the correct command to start the standalone server
 CMD ["node", "server.js"]
