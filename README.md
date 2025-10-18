@@ -98,17 +98,19 @@ A comprehensive Next.js application for managing code snippets and practicing co
 
 ## 🧪 Testing
 
-### End-to-End Tests
+### PlayWright Tests
 ```bash
 # Run all tests
-npm run test:e2e
+npx playwright test
 
 # Run with UI
-npm run test:e2e:ui
+npx playwright test --ui
 
 # Run in headed mode
-npm run test:e2e:headed
+npx playwright test --headed
 ```
+
+Download JMeter and run JMeter tests store in ```bash/corder-web/jmeter``` directory. (please use your delpoyed url instead of baseurl)
 
 ### Test Coverage
 - Tab management workflows
