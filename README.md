@@ -54,7 +54,7 @@ A comprehensive Next.js application for managing code snippets and practicing co
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/lesa-hettiarachchi/coder-web.git
    cd coder-web
    ```
 
