@@ -2,7 +2,7 @@
 
 A comprehensive Next.js application for managing code snippets and practicing coding challenges through interactive escape rooms.
 
-## 🚀 Features
+## ⚙️ Features
 
 ### Tab Management
 - Create, edit, and organize code snippets with rich text editing
@@ -159,9 +159,9 @@ npm run lint             # Run ESLint
 npm run seed-questions   # Seed escape room questions
 
 # Testing
-npm run test:e2e         # Run Playwright tests
-npm run test:e2e:ui      # Run tests with UI
-npm run test:e2e:headed  # Run tests in headed mode
+npx playwright test         # Run Playwright tests
+npx playwright test --ui      # Run tests with UI
+npx playwright test --headed  # Run tests in headed mode
 ```
 
 ## 🗄️ Database Schema
@@ -178,21 +178,6 @@ npm run test:e2e:headed  # Run tests in headed mode
 - Prisma ORM for type-safe database operations
 - Automatic migrations and schema validation
 - Optimized queries with proper indexing
-
-## 🚀 Performance
-
-### Optimization Features
-- Next.js 15 with Turbopack for faster builds
-- Static generation where possible
-- Image optimization and lazy loading
-- Code splitting and dynamic imports
-- Database query optimization
-
-### Monitoring
-- Health check endpoints
-- Performance testing with JMeter
-- Docker health checks
-- Logging and error tracking
 
 ## 🤝 Contributing
 
