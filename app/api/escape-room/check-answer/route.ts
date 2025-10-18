@@ -6,21 +6,19 @@ export async function POST(request: NextRequest) {
   try {
     const { stageId, userCode, sessionId } = await request.json();
     
-    // Validate input
     if (!stageId || !userCode) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get stage data
     const stages = await escapeRoomDatabaseService.getEscapeRoomStages();
     const stage = stages.find((s: { id: number }) => s.id === stageId);
     if (!stage) {
       return NextResponse.json({ error: 'Stage not found' }, { status: 404 });
     }
-    // Validate code with linting
+
     const result = await escapeRoomLinter.validateStage(stageId, userCode, stage.points);
     
-    // Log attempt
+
     if (sessionId) {
       try {
         await escapeRoomDatabaseService.logGameEvent(sessionId, 'linting_attempt', {

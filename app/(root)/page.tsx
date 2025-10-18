@@ -67,7 +67,7 @@ function HomeContent() {
         htmlCode = generateHTMLFromTabs(selectedTabs);
       }
       
-      // Try clipboard API first
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
           await navigator.clipboard.writeText(htmlCode);
@@ -78,7 +78,7 @@ function HomeContent() {
         }
       }
       
-      // Fallback: Create a downloadable file
+
       const blob = new Blob([htmlCode], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -105,7 +105,6 @@ function HomeContent() {
     try {
       const htmlCode = generateHTMLFromTabs(tabs);
       
-      // Try clipboard API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
           await navigator.clipboard.writeText(htmlCode);
@@ -116,7 +115,6 @@ function HomeContent() {
         }
       }
       
-      // Fallback: Create a downloadable file
       const blob = new Blob([htmlCode], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

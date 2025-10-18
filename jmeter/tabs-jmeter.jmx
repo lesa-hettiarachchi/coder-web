@@ -19,7 +19,7 @@
       </ThreadGroup>
       <hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET Request">
-          <stringProp name="HTTPSampler.domain">ec2-3-83-240-114.compute-1.amazonaws.com</stringProp>
+          <stringProp name="HTTPSampler.domain">ec2-54-209-134-106.compute-1.amazonaws.com</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">api/tabs</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
@@ -155,7 +155,7 @@
       </ThreadGroup>
       <hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST Request">
-          <stringProp name="HTTPSampler.domain">ec2-3-83-240-114.compute-1.amazonaws.com</stringProp>
+          <stringProp name="HTTPSampler.domain">ec2-54-209-134-106.compute-1.amazonaws.com</stringProp>
           <stringProp name="HTTPSampler.port">80</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/tabs</stringProp>
@@ -170,7 +170,7 @@
                 <stringProp name="Argument.value">{&#xd;
   &quot;title&quot;: &quot;Test Tab&quot;,&#xd;
   &quot;instructions&quot;: &quot;Test instructions&quot;,&#xd;
-  &quot;code&quot;: &quot;Test body content&quot;&#xd;
+  &quot;body&quot;: &quot;Test body content&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -312,10 +312,10 @@
       </ThreadGroup>
       <hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE Request">
-          <stringProp name="HTTPSampler.domain">ec2-3-83-240-114.compute-1.amazonaws.com</stringProp>
+          <stringProp name="HTTPSampler.domain">ec2-54-209-134-106.compute-1.amazonaws.com</stringProp>
           <stringProp name="HTTPSampler.port">80</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
-          <stringProp name="HTTPSampler.path">/api/tabs/27</stringProp>
+          <stringProp name="HTTPSampler.path">/api/tabs/4</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -325,7 +325,7 @@
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
@@ -409,7 +409,7 @@
           <stringProp name="filename"></stringProp>
         </ResultCollector>
         <hashTree/>
-        <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="Graph Results" enabled="true">
+        <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="Graph Results">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>
@@ -459,10 +459,10 @@
       </ThreadGroup>
       <hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT Request">
-          <stringProp name="HTTPSampler.domain">ec2-3-83-240-114.compute-1.amazonaws.com</stringProp>
+          <stringProp name="HTTPSampler.domain">ec2-54-209-134-106.compute-1.amazonaws.com</stringProp>
           <stringProp name="HTTPSampler.port">80</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
-          <stringProp name="HTTPSampler.path">/api/tabs/23</stringProp>
+          <stringProp name="HTTPSampler.path">/api/tabs/1</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">PUT</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -472,9 +472,9 @@
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">{&#xd;
-  &quot;title&quot;: &quot;Updated Tab Title&quot;,&#xd;
+  &quot;title&quot;: &quot;Updated Tab Title 3&quot;,&#xd;
   &quot;instructions&quot;: &quot;Updated instructions&quot;,&#xd;
-  &quot;code&quot;: &quot;Updated body content&quot;&#xd;
+  &quot;body&quot;: &quot;Updated body content&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
@@ -566,7 +566,7 @@
           <stringProp name="filename"></stringProp>
         </ResultCollector>
         <hashTree/>
-        <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="Graph Results" enabled="true">
+        <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="Graph Results">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>

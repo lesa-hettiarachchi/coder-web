@@ -4,18 +4,15 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:3000"  # Map to port 80 for EC2
+      - "80:3000" 
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:./prisma/dev.db
       - PORT=3000
       - HOSTNAME=0.0.0.0
     volumes:
-      # Persist ONLY the SQLite database file
       - /opt/coder-web/data/prisma/dev.db:/app/prisma/dev.db
-      # Persist any uploaded files or logs
       - /opt/coder-web/data/uploads:/app/data
-      # Persist logs
       - /opt/coder-web/logs:/app/logs
     restart: unless-stopped
     healthcheck:
