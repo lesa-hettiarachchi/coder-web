@@ -1,5 +1,6 @@
 export const handler = async (event) => {
-    const apiUrl = 'http://ec2-54-204-212-68.compute-1.amazonaws.com/api';
+    const apiUrl = 'http://ec2-54-204-212-68.compute-1.amazonaws.com/api'; 
+    // use the url of your own server here
     
     let tabs = [];
     try {
