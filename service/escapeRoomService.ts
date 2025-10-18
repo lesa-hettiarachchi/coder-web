@@ -6,7 +6,7 @@ const STAGES_KEY = 'escapeRoomStages';
 export const escapeRoomService = {
   async getStages(): Promise<EscapeRoomStage[]> {
     try {
-      // Try to get from API first
+
       const response = await fetch('/api/escape-room/questions?count=4');
       if (response.ok) {
         const data = await response.json();
@@ -16,7 +16,6 @@ export const escapeRoomService = {
       console.error('Failed to load stages from API:', error);
     }
     
-    // Fallback to localStorage
     try {
       const stored = localStorage.getItem(STAGES_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -64,7 +63,6 @@ export const escapeRoomService = {
       }
     } catch (error) {
       console.error('Failed to check answer via API:', error);
-      // Fallback to local checking (simplified)
       return {
         isCorrect: false,
         points: 0,

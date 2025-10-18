@@ -12,3 +12,5 @@ echo "Database is ready."
 
 # Execute the main command (passed to the script)
 exec "$@"
+
+# Created with Use of AI Assistant - Google Genimi 2.5 Flash

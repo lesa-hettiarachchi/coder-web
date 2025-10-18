@@ -31,6 +31,7 @@ A comprehensive Next.js application for managing code snippets and practicing co
 - **Tailwind CSS** - Utility-first styling
 - **Radix UI** - Accessible component primitives
 - **Lucide React** - Icon library
+- **ShadCN UI** - Modern Compenet-based UI Libarary
 
 ### Backend & Database
 - **Prisma** - Database ORM and migrations
@@ -92,7 +93,6 @@ A comprehensive Next.js application for managing code snippets and practicing co
 
 ### Docker Configuration
 - Multi-stage build for optimized production image
-- Nginx reverse proxy with SSL termination
 - Health checks and automatic restarts
 - Volume mounts for persistent data
 
@@ -202,5 +202,5 @@ npm run test:e2e:headed  # Run tests in headed mode
 
 ## 📄 License
 
-This project is private and proprietary.
+This project is done as academic project for CSE3CWA.
 

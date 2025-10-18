@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { EscapeRoomGameData, EscapeRoomStage } from '@/types/escapeRoom';
 
 export const escapeRoomDatabaseService = {
-  // Game Session Management
+
   async createGameSession(data: {
     playerName?: string;
     timeLimit: number;
