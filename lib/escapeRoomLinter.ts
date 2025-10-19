@@ -63,7 +63,7 @@ export class EscapeRoomLinter {
         error: stderr.trim(),
         success: true
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Clean up temp file if it exists
       try {
         const tempFile = path.join(os.tmpdir(), `execute_${Date.now()}.py`);
@@ -72,9 +72,11 @@ export class EscapeRoomLinter {
         }
       } catch {}
       
+      const errorMessage = error instanceof Error ? error.message : 'Execution failed';
+      
       return {
         output: '',
-        error: error.message || 'Execution failed',
+        error: errorMessage,
         success: false
       };
     }
