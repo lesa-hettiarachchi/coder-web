@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const result = await escapeRoomLinter.validateStage(stageNumber, userCode, stage.points);
     
 
-    if (sessionId) {
+    if (sessionId && sessionId !== 'test-session' && sessionId !== 'version-test' && sessionId !== 'debug-test') {
       try {
         await escapeRoomDatabaseService.logGameEvent(sessionId, 'linting_attempt', {
           stageId,
