@@ -11,8 +11,7 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
     volumes:
-      # Corrected line: Mount the directory, not the file
-      - /opt/coder-web/data/prisma:/app/prisma # <-- ✅
+      - ./prisma:/app/prisma 
       - /opt/coder-web/data/uploads:/app/data
       - /opt/coder-web/logs:/app/logs
     restart: unless-stopped
