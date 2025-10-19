@@ -46,4 +46,4 @@ ENV NODE_ENV=production
 
 ENTRYPOINT ["./entrypoint.sh"]
 
-CMD ["node", "server.js"]
+CMD ["tsx", "server.js"]
