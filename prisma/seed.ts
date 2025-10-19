@@ -7,9 +7,9 @@ async function seedEscapeRoomQuestions() {
   try {
     console.log('Starting to seed escape room questions...');
     
+    // Clear existing questions (fresh start)
     await prisma.escapeRoomStage.deleteMany({});
     console.log('Cleared existing questions');
-    
 
     for (let i = 0; i < escapeRoomQuestionBank.length; i++) {
       const question = escapeRoomQuestionBank[i];
@@ -90,6 +90,7 @@ async function main() {
     }
   ];
 
+  // Clear and recreate leaderboard entries
   await prisma.leaderboard.deleteMany({});
 
   for (const entry of leaderboardEntries) {
