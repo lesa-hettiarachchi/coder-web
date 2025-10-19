@@ -16,7 +16,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Stage not found' }, { status: 404 });
     }
 
-    const result = await escapeRoomLinter.validateStage(stageId, userCode, stage.points);
+    // Map database stage ID to sequential stage number for linter
+    const stageIndex = stages.findIndex((s: { id: number }) => s.id === stageId);
+    const stageNumber = stageIndex + 1; // Convert 0-based index to 1-based stage number
+
+    const result = await escapeRoomLinter.validateStage(stageNumber, userCode, stage.points);
     
 
     if (sessionId) {
