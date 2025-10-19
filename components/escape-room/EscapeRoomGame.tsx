@@ -569,11 +569,15 @@ export const EscapeRoomGame: React.FC = () => {
                   gameState.feedback.includes('✓') ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                 }`}>
                   <CardContent className="p-4">
-                    <p className={`${
+                    <div className={`${
                       gameState.feedback.includes('✓') ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
                     }`}>
-                      {gameState.feedback}
-                    </p>
+                      {gameState.feedback.split('\n').map((line, index) => (
+                        <div key={index} className={line.trim() === '' ? 'h-2' : ''}>
+                          {line}
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}

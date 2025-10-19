@@ -12,12 +12,16 @@ export interface LintingResult {
   warnings: string[];
   score: number;
   feedback: string;
+  output?: string;
+  executionError?: string;
 }
 
 export interface CodeValidationOptions {
   checkSyntax: boolean;
   checkStyle: boolean;
   checkLogic: boolean;
+  executeCode?: boolean;
+  expectedOutput?: string;
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
 }
@@ -38,6 +42,76 @@ export class EscapeRoomLinter {
       this.pythonAvailable = false;
       return false;
     }
+  }
+
+  private async executePythonCode(code: string, testCode?: string): Promise<{ output: string; error: string; success: boolean }> {
+    try {
+      const tempFile = path.join(os.tmpdir(), `execute_${Date.now()}.py`);
+      const fullCode = testCode ? `${code}\n\n${testCode}` : code;
+      fs.writeFileSync(tempFile, fullCode);
+      
+      const { stdout, stderr } = await execAsync(`python3 "${tempFile}"`, {
+        timeout: 5000, // 5 second timeout
+        maxBuffer: 1024 * 1024 // 1MB buffer
+      });
+      
+      // Clean up
+      fs.unlinkSync(tempFile);
+      
+      return {
+        output: stdout.trim(),
+        error: stderr.trim(),
+        success: true
+      };
+    } catch (error: any) {
+      // Clean up temp file if it exists
+      try {
+        const tempFile = path.join(os.tmpdir(), `execute_${Date.now()}.py`);
+        if (fs.existsSync(tempFile)) {
+          fs.unlinkSync(tempFile);
+        }
+      } catch {}
+      
+      return {
+        output: '',
+        error: error.message || 'Execution failed',
+        success: false
+      };
+    }
+  }
+
+  private getTestCodeForStage(options: CodeValidationOptions): string {
+    // Generate test code based on the expected patterns
+    if (options.requiredPatterns?.includes('def calculate_sum')) {
+      return 'print(calculate_sum([1, 2, 3, 4, 5]))';
+    }
+    if (options.requiredPatterns?.includes('for i in range') && options.requiredPatterns?.includes('print(i)')) {
+      return 'for i in range(5):\n    print(i)';
+    }
+    if (options.requiredPatterns?.includes('def add_numbers')) {
+      return 'print(add_numbers(3, 5))';
+    }
+    if (options.requiredPatterns?.includes('max(numbers)')) {
+      return 'numbers = [3, 7, 2, 9, 1]\nprint(max(numbers))';
+    }
+    if (options.requiredPatterns?.includes('count("a")')) {
+      return 'text = "banana"\nprint(text.count("a"))';
+    }
+    if (options.requiredPatterns?.includes('[::-1]')) {
+      return 'text = "hello"\nprint(text[::-1])';
+    }
+    if (options.requiredPatterns?.includes('title()')) {
+      return 'text = "hello world"\nprint(text.title())';
+    }
+    if (options.requiredPatterns?.includes('a, b = 0, 1') && options.requiredPatterns?.includes('a, b = b, a + b')) {
+      return 'a, b = 0, 1\nfor i in range(5):\n    print(a)\n    a, b = b, a + b';
+    }
+    if (options.requiredPatterns?.includes('if n <= 1') && options.requiredPatterns?.includes('return n * factorial(n - 1)')) {
+      return 'print(factorial(5))';
+    }
+    
+    // Default test - just execute the code as-is
+    return '';
   }
 
   private async runPyflakes(code: string): Promise<{ errors: string[]; warnings: string[] }> {
@@ -559,38 +633,34 @@ export class EscapeRoomLinter {
     let feedback = '';
     
     if (errors.length === 0 && warnings.length === 0) {
-      feedback = '🎉 Excellent! Your code is clean and well-structured.';
+      feedback = 'Excellent! Your code is clean and well-structured.';
     } else if (errors.length === 0) {
-      feedback = '✅ Good work! Your code runs correctly with minor style suggestions.';
+      feedback = 'Good work! Your code runs correctly with minor style suggestions.';
     } else {
-      feedback = '❌ Your code has some issues that need attention.';
+      feedback = 'Your code has some issues that need attention.\n';
     }
     
     if (errors.length > 0) {
-      feedback += '\n\n🔍 Issues to fix:';
-      const userFriendlyErrors = this.convertErrorsToUserFriendly(errors.slice(0, 3));
+      feedback += '\n\n';
+      const userFriendlyErrors = this.convertErrorsToUserFriendly(errors);
       userFriendlyErrors.forEach(error => {
-        feedback += `\n• ${error}`;
+        feedback += `• ${error}\n`;
       });
-      
-      if (errors.length > 3) {
-        feedback += `\n• ... and ${errors.length - 3} more issues`;
-      }
     }
     
     if (warnings.length > 0) {
-      feedback += '\n\n💡 Suggestions for improvement:';
-      const userFriendlyWarnings = this.convertWarningsToUserFriendly(warnings.slice(0, 2));
-      userFriendlyWarnings.forEach(warning => {
-        feedback += `\n• ${warning}`;
-      });
-      
-      if (warnings.length > 2) {
-        feedback += `\n• ... and ${warnings.length - 2} more suggestions`;
+      if (errors.length > 0) {
+        feedback += '\n\n💡 Suggestions for improvement:\n';
+      } else {
+        feedback += '\n\n💡 Suggestions for improvement:\n';
       }
+      const userFriendlyWarnings = this.convertWarningsToUserFriendly(warnings);
+      userFriendlyWarnings.forEach(warning => {
+        feedback += `• ${warning}\n`;
+      });
     }
     
-    return feedback;
+    return feedback.trim();
   }
 
   private convertErrorsToUserFriendly(errors: string[]): string[] {
@@ -786,6 +856,8 @@ export class EscapeRoomLinter {
   ): Promise<LintingResult> {
     const allErrors: string[] = [];
     const allWarnings: string[] = [];
+    let output = '';
+    let executionError = '';
     
     // Check syntax and basic issues
     if (options.checkSyntax) {
@@ -799,6 +871,26 @@ export class EscapeRoomLinter {
       const pylintResult = await this.runPylint(code);
       allErrors.push(...pylintResult.errors);
       allWarnings.push(...pylintResult.warnings);
+    }
+    
+    // Execute code if requested
+    if (options.executeCode) {
+      const isPythonAvailable = await this.checkPythonAvailability();
+      if (isPythonAvailable) {
+        // Add test cases based on the stage
+        const testCode = this.getTestCodeForStage(options);
+        const executionResult = await this.executePythonCode(code, testCode);
+        output = executionResult.output;
+        executionError = executionResult.error;
+        
+        if (!executionResult.success) {
+          allErrors.push(`Code execution failed: ${executionResult.error}`);
+        } else if (options.expectedOutput && executionResult.output !== options.expectedOutput) {
+          allErrors.push(`Expected output: "${options.expectedOutput}", but got: "${executionResult.output}"`);
+        }
+      } else {
+        allWarnings.push('Python not available for code execution');
+      }
     }
     
     // Check required patterns
@@ -821,7 +913,9 @@ export class EscapeRoomLinter {
       errors: allErrors,
       warnings: allWarnings,
       score,
-      feedback
+      feedback,
+      output: output || undefined,
+      executionError: executionError || undefined
     };
   }
 
@@ -831,6 +925,8 @@ export class EscapeRoomLinter {
       checkSyntax: true,
       checkStyle: true,
       checkLogic: true,
+      executeCode: true,
+      expectedOutput: '15', // Expected output for calculate_sum([1, 2, 3, 4, 5])
       requiredPatterns: ['def calculate_sum', 'for num in numbers', 'sum += num', 'return sum']
     }, 125);
   }
@@ -840,6 +936,8 @@ export class EscapeRoomLinter {
       checkSyntax: true,
       checkStyle: true,
       checkLogic: true,
+      executeCode: true,
+      expectedOutput: '0\n1\n2\n3\n4', // Expected output for range(5)
       requiredPatterns: ['for i in range', 'print(i)']
     }, 125);
   }
@@ -849,6 +947,8 @@ export class EscapeRoomLinter {
       checkSyntax: true,
       checkStyle: true,
       checkLogic: true,
+      executeCode: true,
+      expectedOutput: '8', // Expected output for add_numbers(3, 5)
       requiredPatterns: ['def add_numbers', 'return a + b']
     }, 100);
   }
