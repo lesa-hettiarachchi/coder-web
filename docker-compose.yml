@@ -4,14 +4,15 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:3000" 
+      - "80:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:./prisma/dev.db
       - PORT=3000
       - HOSTNAME=0.0.0.0
     volumes:
-      - /opt/coder-web/data/prisma/dev.db:/app/prisma/dev.db
+      # Corrected line: Mount the directory, not the file
+      - /opt/coder-web/data/prisma:/app/prisma # <-- ✅
       - /opt/coder-web/data/uploads:/app/data
       - /opt/coder-web/logs:/app/logs
     restart: unless-stopped
