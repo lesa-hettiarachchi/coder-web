@@ -139,7 +139,7 @@ export class EscapeRoomLinter {
     if (pattern.includes('+=')) {
       // Accumulation pattern - be flexible with variable names
       return normalizedCode.includes('+=') || 
-             normalizedCode.includes(' = ') && normalizedCode.includes(' + ');
+             (normalizedCode.includes(' = ') && normalizedCode.includes(' + '));
     }
     
     if (pattern.includes('return ')) {
@@ -212,7 +212,7 @@ export class EscapeRoomLinter {
       return normalizedCode.includes('@');
     }
     
-    // For complex patterns, try to match key components
+ 
     if (pattern.includes('obj[headers[i]] = values[i]')) {
       return normalizedCode.includes('obj[') && 
              normalizedCode.includes('headers[') && 
@@ -235,8 +235,123 @@ export class EscapeRoomLinter {
              normalizedCode.includes('a,b=b,a+b');
     }
     
-    // Default: exact match (for simple patterns)
-    return normalizedCode.includes(pattern.toLowerCase());
+    
+    if (pattern.includes('for i in range(2, int(n**0.5) + 1)')) {
+      
+      return normalizedCode.includes('for ') && 
+             normalizedCode.includes(' in ') && 
+             normalizedCode.includes('range(') &&
+             normalizedCode.includes('int(') &&
+             normalizedCode.includes('**0.5');
+    }
+    
+    if (pattern.includes('if n % i == 0')) {
+      
+      return normalizedCode.includes('if ') && 
+             normalizedCode.includes(' % ') && 
+             normalizedCode.includes(' == 0');
+    }
+    
+    if (pattern.includes('[x**2 for x in numbers]')) {
+      
+      return normalizedCode.includes('[') && 
+             normalizedCode.includes('**2') && 
+             normalizedCode.includes(' for ') &&
+             normalizedCode.includes(' in ');
+    }
+    
+    if (pattern.includes('max(scores, key=scores.get)')) {
+     
+      return normalizedCode.includes('max(') && 
+             normalizedCode.includes('key=') && 
+             normalizedCode.includes('.get');
+    }
+    
+    if (pattern.includes('split("\\n")') || pattern.includes("split('\\n')")) {
+     
+      return normalizedCode.includes('split(') && 
+             (normalizedCode.includes('"\\n"') || normalizedCode.includes("'\\n'"));
+    }
+    
+    if (pattern.includes("split(',')") || pattern.includes('split(",")')) {
+      
+      return normalizedCode.includes('split(') && 
+             (normalizedCode.includes("','") || normalizedCode.includes('","'));
+    }
+    
+    if (pattern.includes('for i in range(n)')) {
+      
+      return normalizedCode.includes('for ') && 
+             normalizedCode.includes(' in ') && 
+             normalizedCode.includes('range(n)');
+    }
+    
+    if (pattern.includes('for j in range(0, n - i - 1)')) {
+      
+      return normalizedCode.includes('for ') && 
+             normalizedCode.includes(' in ') && 
+             normalizedCode.includes('range(0, n - i - 1)');
+    }
+    
+    if (pattern.includes('arr[j], arr[j + 1] = arr[j + 1], arr[j]')) {
+      
+      return normalizedCode.includes('arr[') && 
+             normalizedCode.includes('arr[j + 1]') &&
+             normalizedCode.includes('arr[j]');
+    }
+    
+    if (pattern.includes('if n <= 1')) {
+      
+      return normalizedCode.includes('if ') && 
+             normalizedCode.includes(' <= 1');
+    }
+    
+    if (pattern.includes('return n * factorial(n - 1)')) {
+      
+      return normalizedCode.includes('return ') && 
+             normalizedCode.includes(' * ') && 
+             normalizedCode.includes('factorial(');
+    }
+    
+    if (pattern.includes('left') && pattern.includes('right') && pattern.includes('mid') && pattern.includes('while')) {
+      
+      return normalizedCode.includes('left') && 
+             normalizedCode.includes('right') && 
+             normalizedCode.includes('mid') && 
+             normalizedCode.includes('while');
+    }
+    
+    if (pattern.includes('re.findall') || pattern.includes('re.search')) {
+      
+      return normalizedCode.includes('re.') && 
+             (normalizedCode.includes('findall') || normalizedCode.includes('search'));
+    }
+    
+    if (pattern.includes('def __init__(self')) {
+     
+      return normalizedCode.includes('def __init__(self');
+    }
+    
+    if (pattern.includes('self.balance')) {
+     
+      return normalizedCode.includes('self.balance');
+    }
+    
+    if (pattern.includes('def deposit(self') || pattern.includes('def withdraw(self')) {
+      
+      return normalizedCode.includes('def ') && 
+             normalizedCode.includes('self') && 
+             (normalizedCode.includes('deposit') || normalizedCode.includes('withdraw'));
+    }
+    
+    
+    const simplePatterns = ['left', 'right', 'mid', 'while', 'email', '@'];
+    if (simplePatterns.some(simple => pattern === simple)) {
+      return normalizedCode.includes(pattern.toLowerCase());
+    }
+    
+    
+    return false;
   }
 
   private checkForbiddenPatterns(code: string, patterns: string[]): string[] {
