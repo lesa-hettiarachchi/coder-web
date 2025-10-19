@@ -24,6 +24,35 @@ export interface CodeValidationOptions {
 
 export class EscapeRoomLinter {
   private async runPyflakes(code: string): Promise<{ errors: string[]; warnings: string[] }> {
+    // First check if code is empty or only comments
+    const nonCommentLines = code.split('\n').filter(line => {
+      const trimmed = line.trim();
+      return trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('"""') && !trimmed.startsWith("'''");
+    });
+    
+    if (nonCommentLines.length === 0) {
+      return { 
+        errors: ['Code cannot be empty or contain only comments. Please write actual Python code.'], 
+        warnings: [] 
+      };
+    }
+    
+    // Check if there's any actual executable code
+    const hasExecutableCode = nonCommentLines.some(line => {
+      const trimmed = line.trim();
+      return /^\s*(def|class|if|for|while|try|except|finally|with|print|return|yield|break|continue|pass|raise|assert|del|global|nonlocal)\b/.test(trimmed) ||
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\(/.test(trimmed) ||
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\[/.test(trimmed) ||
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*[+\-*/%=<>!&|]/.test(trimmed);
+    });
+    
+    if (!hasExecutableCode) {
+      return { 
+        errors: ['Code must contain executable Python statements. Please write actual code that performs operations.'], 
+        warnings: [] 
+      };
+    }
+
     try {
       // Create a temporary file to check
       const tempFile = path.join(os.tmpdir(), `temp_${Date.now()}.py`);
@@ -57,6 +86,35 @@ export class EscapeRoomLinter {
   }
 
   private async runPylint(code: string): Promise<{ errors: string[]; warnings: string[] }> {
+    // First check if code is empty or only comments
+    const nonCommentLines = code.split('\n').filter(line => {
+      const trimmed = line.trim();
+      return trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('"""') && !trimmed.startsWith("'''");
+    });
+    
+    if (nonCommentLines.length === 0) {
+      return { 
+        errors: ['Code cannot be empty or contain only comments. Please write actual Python code.'], 
+        warnings: [] 
+      };
+    }
+    
+    // Check if there's any actual executable code
+    const hasExecutableCode = nonCommentLines.some(line => {
+      const trimmed = line.trim();
+      return /^\s*(def|class|if|for|while|try|except|finally|with|print|return|yield|break|continue|pass|raise|assert|del|global|nonlocal)\b/.test(trimmed) ||
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\(/.test(trimmed) ||
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\[/.test(trimmed) ||
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*[+\-*/%=<>!&|]/.test(trimmed);
+    });
+    
+    if (!hasExecutableCode) {
+      return { 
+        errors: ['Code must contain executable Python statements. Please write actual code that performs operations.'], 
+        warnings: [] 
+      };
+    }
+
     try {
       const tempFile = path.join(os.tmpdir(), `temp_${Date.now()}.py`);
       fs.writeFileSync(tempFile, code);
@@ -369,6 +427,32 @@ export class EscapeRoomLinter {
   private basicSyntaxCheck(code: string): { errors: string[]; warnings: string[] } {
     const errors: string[] = [];
     const warnings: string[] = [];
+    
+    // Check if code is empty or only contains comments/whitespace
+    const nonCommentLines = code.split('\n').filter(line => {
+      const trimmed = line.trim();
+      return trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('"""') && !trimmed.startsWith("'''");
+    });
+    
+    if (nonCommentLines.length === 0) {
+      errors.push('Code cannot be empty or contain only comments. Please write actual Python code.');
+      return { errors, warnings };
+    }
+    
+    // Check if there's any actual executable code (not just variable assignments or imports)
+    const hasExecutableCode = nonCommentLines.some(line => {
+      const trimmed = line.trim();
+      // Look for function definitions, loops, conditionals, print statements, return statements, etc.
+      return /^\s*(def|class|if|for|while|try|except|finally|with|print|return|yield|break|continue|pass|raise|assert|del|global|nonlocal)\b/.test(trimmed) ||
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\(/.test(trimmed) || // Function calls
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\[/.test(trimmed) || // List/dict access
+             /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*[+\-*/%=<>!&|]/.test(trimmed); // Operations
+    });
+    
+    if (!hasExecutableCode) {
+      errors.push('Code must contain executable Python statements. Please write actual code that performs operations.');
+      return { errors, warnings };
+    }
     
     // Basic syntax checks
     const lines = code.split('\n');
