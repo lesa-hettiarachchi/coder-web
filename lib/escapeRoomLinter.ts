@@ -917,13 +917,32 @@ export class EscapeRoomLinter {
     const hasValidPythonStructure = nonCommentLines.some(line => {
       const trimmed = line.trim();
       // Check for valid Python keywords, operators, or function calls
-      return /^\s*(def|class|if|for|while|try|except|finally|with|print|return|yield|break|continue|pass|raise|assert|del|global|nonlocal|import|from)\b/.test(trimmed) ||
+      return /^\s*(def|class|if|for|while|try|except|finally|with|print|return|yield|break|continue|raise|assert|del|global|nonlocal|import|from)\b/.test(trimmed) ||
              /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*[=+\-*/%<>!&|]/.test(trimmed) ||
              /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\(/.test(trimmed) ||
              /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\[/.test(trimmed) ||
              /^\s*[0-9]/.test(trimmed) ||
              /^\s*["'`]/.test(trimmed);
     });
+    
+    // Additional check: reject code that only contains function definitions with pass
+    const hasOnlyPassStatements = nonCommentLines.every(line => {
+      const trimmed = line.trim();
+      return /^\s*def\s+\w+.*:\s*$/.test(trimmed) || 
+             /^\s*pass\s*$/.test(trimmed) ||
+             /^\s*class\s+\w+.*:\s*$/.test(trimmed);
+    });
+    
+    if (hasOnlyPassStatements) {
+      allErrors.push('❌ Code must contain executable statements that perform operations, not just function definitions with pass.');
+      return {
+        isValid: false,
+        errors: allErrors,
+        warnings: allWarnings,
+        score: 0,
+        feedback: this.generateFeedback(allErrors, allWarnings)
+      };
+    }
     
     if (!hasExecutableCode) {
       allErrors.push('❌ Code must contain executable Python statements. Please write actual code that performs operations.');
