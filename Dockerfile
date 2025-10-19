@@ -33,7 +33,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json ./
 
-RUN npm ci --only=production && npm install tsx
+RUN npm ci --only=production && npm install -g tsx
 
 USER nextjs
 
