@@ -29,7 +29,7 @@ export class EscapeRoomLinter {
       const tempFile = path.join(os.tmpdir(), `temp_${Date.now()}.py`);
       fs.writeFileSync(tempFile, code);
       
-      const { stderr } = await execAsync(`python -m pyflakes "${tempFile}"`);
+      const { stderr } = await execAsync(`python3 -m pyflakes "${tempFile}"`);
       
       // Clean up
       fs.unlinkSync(tempFile);
@@ -61,7 +61,7 @@ export class EscapeRoomLinter {
       const tempFile = path.join(os.tmpdir(), `temp_${Date.now()}.py`);
       fs.writeFileSync(tempFile, code);
       
-      const { stdout, stderr } = await execAsync(`python -m pylint --disable=all --enable=unused-variable,undefined-variable,unused-import "${tempFile}"`);
+      const { stdout, stderr } = await execAsync(`python3 -m pylint --disable=all --enable=unused-variable,undefined-variable,unused-import "${tempFile}"`);
       
       // Clean up
       fs.unlinkSync(tempFile);
@@ -822,3 +822,6 @@ export class EscapeRoomLinter {
 }
 
 export const escapeRoomLinter = new EscapeRoomLinter();
+
+
+// Used Support of AI Tool to Build this Code - Genimi Flash 2.5

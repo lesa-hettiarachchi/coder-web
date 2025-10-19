@@ -13,6 +13,10 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
+# Install Python and required packages
+RUN apk add --no-cache python3 py3-pip
+RUN python3 -m pip install pyflakes pylint
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
