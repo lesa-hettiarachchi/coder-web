@@ -23,7 +23,30 @@ export interface CodeValidationOptions {
 }
 
 export class EscapeRoomLinter {
+  private pythonAvailable: boolean | null = null;
+
+  private async checkPythonAvailability(): Promise<boolean> {
+    if (this.pythonAvailable !== null) {
+      return this.pythonAvailable;
+    }
+
+    try {
+      await execAsync('python3 --version');
+      this.pythonAvailable = true;
+      return true;
+    } catch {
+      this.pythonAvailable = false;
+      return false;
+    }
+  }
+
   private async runPyflakes(code: string): Promise<{ errors: string[]; warnings: string[] }> {
+    const isPythonAvailable = await this.checkPythonAvailability();
+    
+    if (!isPythonAvailable) {
+      // Use basic syntax checking without logging warning every time
+      return this.basicSyntaxCheck(code);
+    }
     // First check if code is empty or only comments
     const nonCommentLines = code.split('\n').filter(line => {
       const trimmed = line.trim();
@@ -79,13 +102,18 @@ export class EscapeRoomLinter {
       
       return { errors, warnings };
     } catch {
-      // If Python is not available, fall back to basic syntax checking
-      console.warn('Python not available, using basic syntax checking');
+      // If pyflakes fails, fall back to basic syntax checking
       return this.basicSyntaxCheck(code);
     }
   }
 
   private async runPylint(code: string): Promise<{ errors: string[]; warnings: string[] }> {
+    const isPythonAvailable = await this.checkPythonAvailability();
+    
+    if (!isPythonAvailable) {
+      // Use basic style checking without logging warning every time
+      return this.basicStyleCheck(code);
+    }
     // First check if code is empty or only comments
     const nonCommentLines = code.split('\n').filter(line => {
       const trimmed = line.trim();
@@ -140,8 +168,7 @@ export class EscapeRoomLinter {
       
       return { errors, warnings };
     } catch {
-      // If Python is not available, fall back to basic style checking
-      console.warn('Python not available, using basic style checking');
+      // If pylint fails, fall back to basic style checking
       return this.basicStyleCheck(code);
     }
   }
