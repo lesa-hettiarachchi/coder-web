@@ -27,6 +27,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
+# Fix permissions for Prisma client
+RUN chown -R nextjs:nodejs /app/node_modules/.prisma
+
 COPY --from=builder --chown=nextjs:nodejs /app/types ./types
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 
@@ -34,6 +37,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json ./
 
 RUN npm ci --only=production && npm install -g tsx
+
+# Generate Prisma client and fix permissions
+RUN npx prisma generate
+RUN chown -R nextjs:nodejs /app/node_modules
 
 USER nextjs
 
