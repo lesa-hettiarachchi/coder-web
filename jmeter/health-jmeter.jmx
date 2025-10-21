@@ -21,7 +21,7 @@
       </ThreadGroup>
       <hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HTTP Request">
-          <stringProp name="HTTPSampler.domain">ec2-54-86-93-119.compute-1.amazonaws.com</stringProp>
+          <stringProp name="HTTPSampler.domain">ec2-54-164-249-155.compute-1.amazonaws.com</stringProp>
           <stringProp name="HTTPSampler.protocol">http</stringProp>
           <stringProp name="HTTPSampler.path">/api/health</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
