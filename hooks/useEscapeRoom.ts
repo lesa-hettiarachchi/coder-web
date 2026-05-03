@@ -143,20 +143,20 @@ export const useEscapeRoom = () => {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Failed to save to leaderboard:', response.status, errorText);
+        console.error('Failed to save to leaderboard:', response.status, errorText);
       } else {
         const result = await response.json();
-        console.log('✅ Successfully saved to leaderboard:', result);
+        console.log('Successfully saved to leaderboard:', result);
       }
     } catch (error) {
-      console.error('💥 Error saving to leaderboard:', error);
+      console.error('Error saving to leaderboard:', error);
     }
   }, [gameState.playerName, gameState.stagesCompleted.length, gameState.customTime, maxPossibleScore, getGameMode, calculateLeaderboardScore]);
 
 
   useEffect(() => {
     if (gameState.stagesCompleted.length === stages.length && stages.length > 0 && !gameState.gameWon) {
-      console.log('🎉 Game completed! Calculating final score and saving...');
+      console.log('Game completed! Calculating final score and saving...');
 
       const timeCompleted = gameState.customTime * 60 - gameState.timeLeft;
       const timeBonusPercentage = Math.floor((gameState.timeLeft / (gameState.customTime * 60)) * 100);
